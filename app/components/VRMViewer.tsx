@@ -7,7 +7,6 @@ import { VRMModel, VRMLoadResult } from '../types/vrm'
 import { setupVRMModel, hasExpressionManager } from '../utils/vrmSetup'
 import { loadVRMAnimation } from '../lib/VRMAnimation/loadVRMAnimation'
 import { AutoLookAt } from '../features/emoteController/autoLookAt'
-import { DragControls, CharacterPosition } from '../features/controls/DragControls'
 
 interface VRMViewerProps {
   modelPath?: string
@@ -20,13 +19,9 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
-  const [characterPosition, setCharacterPosition] = useState<CharacterPosition>({ x: 0, y: 0, z: 0 })
 
   useEffect(() => {
-    // コンポーネントがマウントされたことを記録
     setIsMounted(true)
-
-    // ブラウザ環境でのみ実行
     if (typeof window === 'undefined') return
 
     let cleanup: (() => void) | null = null
@@ -35,10 +30,10 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
       if (!canvasRef.current) return
 
       try {
-        // 動的インポートでThree.jsを読み込み
         const THREE = await import('three')
         const { VRMLoaderPlugin } = await import('@pixiv/three-vrm')
         const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader')
+        const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls')
 
         // Three.js setup
         const scene = new THREE.Scene()
@@ -80,6 +75,12 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         const ambientLight = new THREE.AmbientLight(0xffffff, VRM_CONFIG.LIGHTING.AMBIENT.INTENSITY)
         scene.add(ambientLight)
 
+        // Camera controls setup
+        const cameraControls = new OrbitControls(camera, renderer.domElement)
+        cameraControls.screenSpacePanning = true
+        cameraControls.target.set(0, VRM_CONFIG.CAMERA.POSITION.Y, 0)
+        cameraControls.update()
+
         // Load VRM with LookAtSmoother plugin
         const { VRMLookAtSmootherLoaderPlugin } = await import('../lib/VRMLookAtSmoother/VRMLookAtSmootherLoaderPlugin')
         
@@ -92,7 +93,6 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         let autoBlink: AutoBlink | null = null
         let autoLookAt: AutoLookAt | null = null
         let mixer: THREE.AnimationMixer | null = null
-        let dragControls: DragControls | null = null
         const clock = new THREE.Clock()
 
         loader.load(
@@ -116,13 +116,6 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
 
             scene.add(vrm.scene)
 
-            // Initialize drag controls
-            dragControls = new DragControls(renderer, camera)
-            dragControls.setCharacter(vrm.scene)
-            dragControls.onPositionChange = (position: CharacterPosition) => {
-              setCharacterPosition(position)
-            }
-
             // Load idle animation
             try {
               const idleAnimation = await loadVRMAnimation('/idle_loop.vrma')
@@ -138,7 +131,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
 
             setIsLoaded(true)
           },
-          undefined, // Remove progress logging for cleaner console
+          undefined,
           (error: unknown) => {
             console.error('Failed to load VRM:', error)
             setError('VRMファイルの読み込みに失敗しました')
@@ -156,6 +149,9 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           if (mixer) {
             mixer.update(deltaTime)
           }
+          
+          // Update camera controls
+          cameraControls.update()
           
           // Update VRM and auto blink
           if (vrm) {
@@ -175,6 +171,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           camera.aspect = window.innerWidth / window.innerHeight
           camera.updateProjectionMatrix()
           renderer.setSize(window.innerWidth, window.innerHeight)
+          cameraControls.update()
         }
         
         window.addEventListener('resize', handleResize)
@@ -186,9 +183,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           if (mixer) {
             mixer.stopAllAction()
           }
-          if (dragControls) {
-            dragControls.dispose()
-          }
+          cameraControls.dispose()
           renderer.dispose()
         }
 
@@ -205,7 +200,6 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
     }
   }, [modelPath])
 
-  // SSRとクライアントサイドで同じ内容をレンダリング
   if (!isMounted) {
     return (
       <canvas

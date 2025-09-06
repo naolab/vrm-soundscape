@@ -1,13 +1,11 @@
-import { VRMHumanoid, VRMLookAt, VRMLookAtApplier } from "@pixiv/three-vrm";
-import * as THREE from "three";
+import { VRMHumanoid, VRMLookAt, VRMLookAtApplier } from "@pixiv/three-vrm"
+import * as THREE from "three"
 
 /** サッケードが発生するまでの最小間隔 */
-const SACCADE_MIN_INTERVAL = 0.5;
+const SACCADE_MIN_INTERVAL = 0.5
 
-/**
- * サッケードが発生する確率
- */
-const SACCADE_PROC = 0.05;
+/** サッケードが発生する確率 */
+const SACCADE_PROC = 0.05
 
 /** サッケードの範囲半径。lookAtに渡される値で、実際の眼球の移動半径ではないので、若干大きめに。 in degrees */
 const SACCADE_RADIUS = 5.0;
