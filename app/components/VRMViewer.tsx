@@ -7,6 +7,7 @@ import { VRMModel, VRMLoadResult } from '../types/vrm'
 import { setupVRMModel, hasExpressionManager } from '../utils/vrmSetup'
 import { loadVRMAnimation } from '../lib/VRMAnimation/loadVRMAnimation'
 import { AutoLookAt } from '../features/emoteController/autoLookAt'
+import { DragControls, CharacterPosition } from '../features/controls/DragControls'
 
 interface VRMViewerProps {
   modelPath?: string
@@ -19,6 +20,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
+  const [characterPosition, setCharacterPosition] = useState<CharacterPosition>({ x: 0, y: 0, z: 0 })
 
   useEffect(() => {
     // コンポーネントがマウントされたことを記録
@@ -90,6 +92,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         let autoBlink: AutoBlink | null = null
         let autoLookAt: AutoLookAt | null = null
         let mixer: THREE.AnimationMixer | null = null
+        let dragControls: DragControls | null = null
         const clock = new THREE.Clock()
 
         loader.load(
@@ -112,6 +115,13 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
             mixer = new THREE.AnimationMixer(vrm.scene)
 
             scene.add(vrm.scene)
+
+            // Initialize drag controls
+            dragControls = new DragControls(renderer, camera)
+            dragControls.setCharacter(vrm.scene)
+            dragControls.onPositionChange = (position: CharacterPosition) => {
+              setCharacterPosition(position)
+            }
 
             // Load idle animation
             try {
@@ -176,6 +186,9 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           if (mixer) {
             mixer.stopAllAction()
           }
+          if (dragControls) {
+            dragControls.dispose()
+          }
           renderer.dispose()
         }
 
@@ -203,7 +216,6 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           left: 0,
           width: '100%',
           height: '100%',
-          pointerEvents: 'none'
         }}
       />
     )
@@ -249,7 +261,6 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           left: 0,
           width: '100%',
           height: '100%',
-          pointerEvents: 'none'
         }}
       />
     </>
