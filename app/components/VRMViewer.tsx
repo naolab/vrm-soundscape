@@ -183,11 +183,23 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           if (vrm) {
             vrm.update(deltaTime)
             
-            // Apply lip sync
-            if (vrm.expressionManager && mouthExpressionName && lipSyncVolume > 0) {
-              vrm.expressionManager.setValue(mouthExpressionName, lipSyncVolume * 0.8)
-            } else if (vrm.expressionManager && mouthExpressionName) {
-              vrm.expressionManager.setValue(mouthExpressionName, 0)
+            // Test: Show current lipSyncVolume value visually
+            if (vrm.expressionManager) {
+              // If any lipSyncVolume detected (even 0.001), force mouth open
+              const testWeight = lipSyncVolume > 0.001 ? 1.0 : 0
+              try {
+                vrm.expressionManager.setValue("aa", testWeight)
+              } catch (e) {
+                const alternatives = ["A", "a"]
+                for (const name of alternatives) {
+                  try {
+                    vrm.expressionManager.setValue(name, testWeight)
+                    break
+                  } catch (e2) {
+                    continue
+                  }
+                }
+              }
             }
           }
           
@@ -230,7 +242,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
     return () => {
       if (cleanup) cleanup()
     }
-  }, [modelPath, followCamera, lipSyncVolume])
+  }, [modelPath, followCamera])
 
   if (!isMounted) {
     return (

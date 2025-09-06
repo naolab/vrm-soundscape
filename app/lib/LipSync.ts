@@ -32,12 +32,15 @@ export class LipSync {
 
     this.analyser.getFloatTimeDomainData(this.dataArray)
     
-    let sum = 0
+    let volume = 0.0
     for (let i = 0; i < this.dataArray.length; i++) {
-      sum += Math.abs(this.dataArray[i])
+      volume = Math.max(volume, Math.abs(this.dataArray[i]))
     }
-    
-    const volume = sum / this.dataArray.length
-    return Math.min(volume * 5, 1) // Amplify and cap at 1
+
+    // ChatVRM's sigmoid function
+    volume = 1 / (1 + Math.exp(-45 * volume + 5))
+    if (volume < 0.1) volume = 0
+
+    return volume
   }
 }

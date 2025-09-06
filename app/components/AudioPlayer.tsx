@@ -28,7 +28,7 @@ export function AudioPlayer({ onVolumeChange }: AudioPlayerProps) {
 
       // Volume monitoring loop
       const updateVolume = () => {
-        if (lipSyncRef.current && isPlaying) {
+        if (lipSyncRef.current && sourceRef.current) {
           const volume = lipSyncRef.current.getVolume()
           onVolumeChange?.(volume)
           animationRef.current = requestAnimationFrame(updateVolume)
@@ -38,9 +38,11 @@ export function AudioPlayer({ onVolumeChange }: AudioPlayerProps) {
 
       source.onended = () => {
         setIsPlaying(false)
+        sourceRef.current = null
         onVolumeChange?.(0)
         if (animationRef.current) {
           cancelAnimationFrame(animationRef.current)
+          animationRef.current = null
         }
       }
     } catch (error) {
