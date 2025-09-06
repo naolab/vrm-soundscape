@@ -2,6 +2,9 @@
 
 import React, { useRef, useEffect, useState } from 'react'
 import { VRM_CONFIG } from '../constants/vrm'
+import { AutoBlink } from '../features/animation/AutoBlink'
+import { VRMModel, VRMLoadResult } from '../types/vrm'
+import { setupVRMModel, hasExpressionManager } from '../utils/vrmSetup'
 
 interface VRMViewerProps {
   modelPath?: string
@@ -77,24 +80,28 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         const loader = new GLTFLoader()
         loader.register((parser: any) => new VRMLoaderPlugin(parser))
 
-        let vrm: any = null
+        let vrm: VRMModel | null = null
+        let autoBlink: AutoBlink | null = null
         const clock = new THREE.Clock()
 
         loader.load(
           modelPath,
-          (gltf: any) => {
+          (gltf: VRMLoadResult) => {
             vrm = gltf.userData.vrm
             
-            // Disable frustum culling for better performance
-            vrm.scene.traverse((obj: any) => {
-              obj.frustumCulled = false
-            })
+            // Setup VRM model
+            setupVRMModel(vrm)
+
+            // Initialize auto blink if expressionManager exists
+            if (hasExpressionManager(vrm)) {
+              autoBlink = new AutoBlink(vrm.expressionManager)
+            }
 
             scene.add(vrm.scene)
             setIsLoaded(true)
           },
           undefined, // Remove progress logging for cleaner console
-          (error: any) => {
+          (error: unknown) => {
             console.error('Failed to load VRM:', error)
             setError('VRMファイルの読み込みに失敗しました')
           }
@@ -107,8 +114,13 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           
           const deltaTime = clock.getDelta()
           
+          // Update VRM and auto blink
           if (vrm) {
             vrm.update(deltaTime)
+          }
+          
+          if (autoBlink) {
+            autoBlink.update(deltaTime)
           }
           
           renderer.render(scene, camera)
