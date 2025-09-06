@@ -1,17 +1,25 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import * as THREE from 'three'
 import { LipSync } from '../lib/LipSync'
+import { UI_STYLES } from '../constants/ui'
+import { useDistanceVolumeControl } from '../hooks/useDistanceVolumeControl'
 
 interface AudioPlayerProps {
   onVolumeChange?: (volume: number) => void
+  camera?: THREE.Camera
+  characterPosition?: THREE.Vector3
 }
 
-export function AudioPlayer({ onVolumeChange }: AudioPlayerProps) {
+export function AudioPlayer({ onVolumeChange, camera, characterPosition }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const lipSyncRef = useRef<LipSync | null>(null)
   const sourceRef = useRef<AudioBufferSourceNode | null>(null)
   const animationRef = useRef<number | null>(null)
+
+  // Use optimized distance-based volume control
+  useDistanceVolumeControl(lipSyncRef, isPlaying, camera, characterPosition)
 
   const play = async () => {
     try {
@@ -65,17 +73,9 @@ export function AudioPlayer({ onVolumeChange }: AudioPlayerProps) {
     <button
       onClick={isPlaying ? stop : play}
       style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        width: '50px',
-        height: '50px',
-        borderRadius: '50%',
-        backgroundColor: 'white',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '20px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+        ...UI_STYLES.POSITION.AUDIO_PLAYER,
+        ...UI_STYLES.BUTTON.BASE,
+        ...UI_STYLES.BUTTON.AUDIO_PLAYER
       }}
     >
       {isPlaying ? '⏸' : '▶'}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import * as THREE from 'three'
 import { useSettings } from './hooks/useSettings'
 import { Menu } from './components/Menu'
 import { Settings } from './components/settings'
@@ -20,6 +21,8 @@ export default function Home() {
   
   const [followCamera, setFollowCamera] = useState(false)
   const [lipSyncVolume, setLipSyncVolume] = useState(0)
+  const [camera, setCamera] = useState<THREE.Camera | null>(null)
+  const [characterPosition, setCharacterPosition] = useState<THREE.Vector3 | null>(null)
 
   return (
     <>
@@ -29,8 +32,17 @@ export default function Home() {
         position: 'relative',
         ...getBackgroundStyle(currentTheme)
       }}>
-        <VRMViewer followCamera={followCamera} lipSyncVolume={lipSyncVolume} />
-        <AudioPlayer onVolumeChange={setLipSyncVolume} />
+        <VRMViewer 
+          followCamera={followCamera} 
+          lipSyncVolume={lipSyncVolume}
+          onCameraUpdate={setCamera}
+          onCharacterPositionUpdate={setCharacterPosition}
+        />
+        <AudioPlayer 
+          onVolumeChange={setLipSyncVolume}
+          camera={camera}
+          characterPosition={characterPosition}
+        />
         <Menu onOpenSettings={openSettings} />
       </main>
 

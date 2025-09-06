@@ -13,12 +13,16 @@ interface VRMViewerProps {
   modelPath?: string
   followCamera?: boolean
   lipSyncVolume?: number
+  onCameraUpdate?: (camera: THREE.Camera) => void
+  onCharacterPositionUpdate?: (position: THREE.Vector3) => void
 }
 
 export const VRMViewer: React.FC<VRMViewerProps> = ({ 
   modelPath = VRM_CONFIG.DEFAULT_MODEL_PATH,
   followCamera = false,
-  lipSyncVolume = 0
+  lipSyncVolume = 0,
+  onCameraUpdate,
+  onCharacterPositionUpdate
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -86,6 +90,9 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         cameraControls.target.set(0, VRM_CONFIG.CAMERA.POSITION.Y, 0)
         cameraControls.update()
 
+        // Notify parent about initial camera state
+        onCameraUpdate?.(camera)
+
         // Load VRM with LookAtSmoother plugin
         const { VRMLookAtSmootherLoaderPlugin } = await import('../lib/VRMLookAtSmoother/VRMLookAtSmootherLoaderPlugin')
         
@@ -116,8 +123,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
               
               // Find available mouth expression
               const expressions = Object.keys(vrm.expressionManager.expressions)
-              const mouthCandidates = ['aa', 'A', 'a', 'mouth_a', 'mouth_aa', 'Aa', 'oh', 'O', 'o']
-              for (const candidate of mouthCandidates) {
+              for (const candidate of VRM_CONFIG.MOUTH_EXPRESSION_CANDIDATES) {
                 if (expressions.includes(candidate)) {
                   mouthExpressionName = candidate
                   break
@@ -136,6 +142,9 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
             mixer = new THREE.AnimationMixer(vrm.scene)
 
             scene.add(vrm.scene)
+
+            // Notify parent about character position
+            onCharacterPositionUpdate?.(vrm.scene.position)
 
             // Load idle animation
             try {
@@ -173,6 +182,9 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           // Update camera controls
           cameraControls.update()
           
+          // Notify parent about camera changes
+          onCameraUpdate?.(camera)
+          
           // Update camera follower
           if (cameraFollower) {
             cameraFollower.setEnabled(followCamera)
@@ -183,23 +195,10 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           if (vrm) {
             vrm.update(deltaTime)
             
-            // Test: Show current lipSyncVolume value visually
-            if (vrm.expressionManager) {
-              // If any lipSyncVolume detected (even 0.001), force mouth open
+            // Update lip sync using pre-determined mouth expression
+            if (vrm.expressionManager && mouthExpressionName) {
               const testWeight = lipSyncVolume > 0.001 ? 1.0 : 0
-              try {
-                vrm.expressionManager.setValue("aa", testWeight)
-              } catch (e) {
-                const alternatives = ["A", "a"]
-                for (const name of alternatives) {
-                  try {
-                    vrm.expressionManager.setValue(name, testWeight)
-                    break
-                  } catch (e2) {
-                    continue
-                  }
-                }
-              }
+              vrm.expressionManager.setValue(mouthExpressionName, testWeight)
             }
           }
           

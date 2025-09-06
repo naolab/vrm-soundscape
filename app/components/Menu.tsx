@@ -1,5 +1,6 @@
 import React from 'react'
 import { Button } from './ui'
+import { UI_STYLES } from '../constants/ui'
 
 interface MenuProps {
   onOpenSettings: () => void
@@ -7,22 +8,12 @@ interface MenuProps {
 
 export const Menu: React.FC<MenuProps> = ({ onOpenSettings }) => {
   return (
-    <div style={{ position: 'absolute', top: '24px', left: '24px', zIndex: 10 }}>
+    <div style={UI_STYLES.POSITION.MENU}>
       <Button
         onClick={onOpenSettings}
         style={{
-          width: '44px',
-          height: '44px',
-          borderRadius: '8px',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          gap: '3px'
+          ...UI_STYLES.BUTTON.BASE,
+          ...UI_STYLES.BUTTON.MENU
         }}
       >
         <div style={{
