@@ -6,8 +6,8 @@ export const VRM_CONFIG = {
     FAR: 20.0,
     POSITION: {
       X: 0.0,
-      Y: 1.2,
-      Z: 2.0
+      Y: 1.3,
+      Z: 1.4
     }
   },
   LIGHTING: {

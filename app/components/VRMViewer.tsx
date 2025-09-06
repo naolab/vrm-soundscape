@@ -6,6 +6,7 @@ import { AutoBlink } from '../features/animation/AutoBlink'
 import { VRMModel, VRMLoadResult } from '../types/vrm'
 import { setupVRMModel, hasExpressionManager } from '../utils/vrmSetup'
 import { loadVRMAnimation } from '../lib/VRMAnimation/loadVRMAnimation'
+import { AutoLookAt } from '../features/emoteController/autoLookAt'
 
 interface VRMViewerProps {
   modelPath?: string
@@ -77,12 +78,17 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         const ambientLight = new THREE.AmbientLight(0xffffff, VRM_CONFIG.LIGHTING.AMBIENT.INTENSITY)
         scene.add(ambientLight)
 
-        // Load VRM
+        // Load VRM with LookAtSmoother plugin
+        const { VRMLookAtSmootherLoaderPlugin } = await import('../lib/VRMLookAtSmoother/VRMLookAtSmootherLoaderPlugin')
+        
         const loader = new GLTFLoader()
-        loader.register((parser: any) => new VRMLoaderPlugin(parser))
+        loader.register((parser: any) => new VRMLoaderPlugin(parser, {
+          lookAtPlugin: new VRMLookAtSmootherLoaderPlugin(parser),
+        }))
 
         let vrm: VRMModel | null = null
         let autoBlink: AutoBlink | null = null
+        let autoLookAt: AutoLookAt | null = null
         let mixer: THREE.AnimationMixer | null = null
         const clock = new THREE.Clock()
 
@@ -98,6 +104,9 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
             if (hasExpressionManager(vrm)) {
               autoBlink = new AutoBlink(vrm.expressionManager)
             }
+
+            // Initialize auto look-at system
+            autoLookAt = new AutoLookAt(vrm, camera)
 
             // Initialize animation mixer
             mixer = new THREE.AnimationMixer(vrm.scene)
