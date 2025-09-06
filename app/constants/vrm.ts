@@ -1,0 +1,23 @@
+// VRM viewer configuration constants
+export const VRM_CONFIG = {
+  CAMERA: {
+    FOV: 30.0,
+    NEAR: 0.1,
+    FAR: 20.0,
+    POSITION: {
+      X: 0.0,
+      Y: 1.2,
+      Z: 2.0
+    }
+  },
+  LIGHTING: {
+    DIRECTIONAL: {
+      INTENSITY: Math.PI * 0.8,
+      POSITION: { X: 1.0, Y: 1.0, Z: 1.0 }
+    },
+    AMBIENT: {
+      INTENSITY: Math.PI * 0.2
+    }
+  },
+  DEFAULT_MODEL_PATH: '/models/monet.vrm'
+} as const
