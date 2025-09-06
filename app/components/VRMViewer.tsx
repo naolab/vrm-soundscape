@@ -7,13 +7,16 @@ import { VRMModel, VRMLoadResult } from '../types/vrm'
 import { setupVRMModel, hasExpressionManager } from '../utils/vrmSetup'
 import { loadVRMAnimation } from '../lib/VRMAnimation/loadVRMAnimation'
 import { AutoLookAt } from '../features/emoteController/autoLookAt'
+import { CameraFollower } from '../features/camera/CameraFollower'
 
 interface VRMViewerProps {
   modelPath?: string
+  followCamera?: boolean
 }
 
 export const VRMViewer: React.FC<VRMViewerProps> = ({ 
-  modelPath = VRM_CONFIG.DEFAULT_MODEL_PATH 
+  modelPath = VRM_CONFIG.DEFAULT_MODEL_PATH,
+  followCamera = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -93,6 +96,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         let autoBlink: AutoBlink | null = null
         let autoLookAt: AutoLookAt | null = null
         let mixer: THREE.AnimationMixer | null = null
+        let cameraFollower: CameraFollower | null = null
         const clock = new THREE.Clock()
 
         loader.load(
@@ -111,6 +115,10 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
             // Initialize auto look-at system
             autoLookAt = new AutoLookAt(vrm, camera)
 
+            // Initialize camera follower
+            cameraFollower = new CameraFollower(vrm, camera)
+            cameraFollower.setEnabled(followCamera)
+
             // Initialize animation mixer
             mixer = new THREE.AnimationMixer(vrm.scene)
 
@@ -126,14 +134,13 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
                 action.play()
               }
             } catch (error) {
-              console.warn('Could not load idle animation:', error)
+              // Idle animation is optional, continue without it
             }
 
             setIsLoaded(true)
           },
           undefined,
           (error: unknown) => {
-            console.error('Failed to load VRM:', error)
             setError('VRMファイルの読み込みに失敗しました')
           }
         )
@@ -152,6 +159,12 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           
           // Update camera controls
           cameraControls.update()
+          
+          // Update camera follower
+          if (cameraFollower) {
+            cameraFollower.setEnabled(followCamera)
+            cameraFollower.update()
+          }
           
           // Update VRM and auto blink
           if (vrm) {
@@ -188,7 +201,6 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         }
 
       } catch (err) {
-        console.error('VRM initialization error:', err)
         setError('VRMの初期化に失敗しました')
       }
     }
@@ -198,7 +210,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
     return () => {
       if (cleanup) cleanup()
     }
-  }, [modelPath])
+  }, [modelPath, followCamera])
 
   if (!isMounted) {
     return (

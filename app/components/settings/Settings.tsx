@@ -2,19 +2,24 @@ import React from 'react'
 import { Theme, ThemeOption } from '../../types/settings'
 import { Button } from '../ui'
 import { ThemeSettings } from './ThemeSettings'
+import { CameraSettings } from './CameraSettings'
 
 interface SettingsProps {
   themes: ThemeOption[]
   currentTheme: Theme
+  followCamera: boolean
   onClose: () => void
   onThemeChange: (theme: Theme) => void
+  onFollowCameraChange: (value: boolean) => void
 }
 
 export const Settings: React.FC<SettingsProps> = ({
   themes,
   currentTheme,
+  followCamera,
   onClose,
-  onThemeChange
+  onThemeChange,
+  onFollowCameraChange
 }) => {
   return (
     <div style={{
@@ -70,6 +75,11 @@ export const Settings: React.FC<SettingsProps> = ({
           }}>
             設定
           </div>
+          
+          <CameraSettings
+            followCamera={followCamera}
+            onFollowCameraChange={onFollowCameraChange}
+          />
           
           <ThemeSettings
             themes={themes}
