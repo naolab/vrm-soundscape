@@ -5,6 +5,7 @@ import { VRM_CONFIG } from '../constants/vrm'
 import { AutoBlink } from '../features/animation/AutoBlink'
 import { VRMModel, VRMLoadResult } from '../types/vrm'
 import { setupVRMModel, hasExpressionManager } from '../utils/vrmSetup'
+import { loadVRMAnimation } from '../lib/VRMAnimation/loadVRMAnimation'
 
 interface VRMViewerProps {
   modelPath?: string
@@ -82,11 +83,12 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
 
         let vrm: VRMModel | null = null
         let autoBlink: AutoBlink | null = null
+        let mixer: THREE.AnimationMixer | null = null
         const clock = new THREE.Clock()
 
         loader.load(
           modelPath,
-          (gltf: VRMLoadResult) => {
+          async (gltf: VRMLoadResult) => {
             vrm = gltf.userData.vrm
             
             // Setup VRM model
@@ -97,7 +99,24 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
               autoBlink = new AutoBlink(vrm.expressionManager)
             }
 
+            // Initialize animation mixer
+            mixer = new THREE.AnimationMixer(vrm.scene)
+
             scene.add(vrm.scene)
+
+            // Load idle animation
+            try {
+              const idleAnimation = await loadVRMAnimation('/idle_loop.vrma')
+              if (idleAnimation) {
+                const clip = idleAnimation.createAnimationClip(vrm)
+                const action = mixer.clipAction(clip)
+                action.setLoop(THREE.LoopRepeat, Infinity)
+                action.play()
+              }
+            } catch (error) {
+              console.warn('Could not load idle animation:', error)
+            }
+
             setIsLoaded(true)
           },
           undefined, // Remove progress logging for cleaner console
@@ -113,6 +132,11 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           animationId = requestAnimationFrame(animate)
           
           const deltaTime = clock.getDelta()
+          
+          // Update animation mixer first
+          if (mixer) {
+            mixer.update(deltaTime)
+          }
           
           // Update VRM and auto blink
           if (vrm) {
@@ -140,6 +164,9 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         cleanup = () => {
           window.removeEventListener('resize', handleResize)
           cancelAnimationFrame(animationId)
+          if (mixer) {
+            mixer.stopAllAction()
+          }
           renderer.dispose()
         }
 
