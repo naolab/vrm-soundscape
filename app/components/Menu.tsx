@@ -6,7 +6,7 @@ interface MenuProps {
   onOpenSettings: () => void
 }
 
-export const Menu: React.FC<MenuProps> = ({ onOpenSettings }) => {
+export const Menu: React.FC<MenuProps> = React.memo(({ onOpenSettings }) => {
   return (
     <div style={UI_STYLES.POSITION.MENU}>
       <Button
@@ -37,4 +37,4 @@ export const Menu: React.FC<MenuProps> = ({ onOpenSettings }) => {
       </Button>
     </div>
   )
-}
+})

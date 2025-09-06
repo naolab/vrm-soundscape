@@ -7,21 +7,22 @@ import { Menu } from './components/Menu'
 import { Settings } from './components/settings'
 import { VRMViewer } from './components/VRMViewer'
 import { AudioPlayer } from './components/AudioPlayer'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 export default function Home() {
   const {
     showSettings,
     currentTheme,
+    followCamera,
     themes,
     getBackgroundStyle,
     openSettings,
     closeSettings,
-    changeTheme
+    changeTheme,
+    changeFollowCamera
   } = useSettings()
-  
-  const [followCamera, setFollowCamera] = useState(false)
   const [lipSyncVolume, setLipSyncVolume] = useState(0)
-  const [camera, setCamera] = useState<THREE.Camera | null>(null)
+  const [camera, setCamera] = useState<THREE.PerspectiveCamera | null>(null)
   const [characterPosition, setCharacterPosition] = useState<THREE.Vector3 | null>(null)
 
   return (
@@ -32,12 +33,28 @@ export default function Home() {
         position: 'relative',
         ...getBackgroundStyle(currentTheme)
       }}>
-        <VRMViewer 
-          followCamera={followCamera} 
-          lipSyncVolume={lipSyncVolume}
-          onCameraUpdate={setCamera}
-          onCharacterPositionUpdate={setCharacterPosition}
-        />
+        <ErrorBoundary
+          fallback={
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              textAlign: 'center',
+              color: '#dc2626'
+            }}>
+              <div style={{ fontSize: '24px', marginBottom: '16px' }}>⚠️</div>
+              <div>VRMキャラクターの読み込みに失敗しました</div>
+            </div>
+          }
+        >
+          <VRMViewer 
+            followCamera={followCamera} 
+            lipSyncVolume={lipSyncVolume}
+            onCameraUpdate={setCamera}
+            onCharacterPositionUpdate={setCharacterPosition}
+          />
+        </ErrorBoundary>
         <AudioPlayer 
           onVolumeChange={setLipSyncVolume}
           camera={camera}
@@ -53,7 +70,7 @@ export default function Home() {
           followCamera={followCamera}
           onClose={closeSettings}
           onThemeChange={changeTheme}
-          onFollowCameraChange={setFollowCamera}
+          onFollowCameraChange={changeFollowCamera}
         />
       )}
     </>

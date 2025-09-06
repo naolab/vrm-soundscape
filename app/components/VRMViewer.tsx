@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useCallback } from 'react'
+import * as THREE from 'three'
 import { VRM_CONFIG } from '../constants/vrm'
 import { AutoBlink } from '../features/animation/AutoBlink'
 import { VRMModel, VRMLoadResult } from '../types/vrm'
@@ -13,7 +14,7 @@ interface VRMViewerProps {
   modelPath?: string
   followCamera?: boolean
   lipSyncVolume?: number
-  onCameraUpdate?: (camera: THREE.Camera) => void
+  onCameraUpdate?: (camera: THREE.PerspectiveCamera) => void
   onCharacterPositionUpdate?: (position: THREE.Vector3) => void
 }
 
@@ -28,6 +29,15 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
+
+  // Memoize camera update callback to prevent unnecessary re-renders
+  const handleCameraUpdate = useCallback((camera: THREE.PerspectiveCamera) => {
+    onCameraUpdate?.(camera)
+  }, [onCameraUpdate])
+
+  const handleCharacterPositionUpdate = useCallback((position: THREE.Vector3) => {
+    onCharacterPositionUpdate?.(position)
+  }, [onCharacterPositionUpdate])
 
   useEffect(() => {
     setIsMounted(true)
@@ -91,7 +101,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         cameraControls.update()
 
         // Notify parent about initial camera state
-        onCameraUpdate?.(camera)
+        handleCameraUpdate(camera)
 
         // Load VRM with LookAtSmoother plugin
         const { VRMLookAtSmootherLoaderPlugin } = await import('../lib/VRMLookAtSmoother/VRMLookAtSmootherLoaderPlugin')
@@ -144,7 +154,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
             scene.add(vrm.scene)
 
             // Notify parent about character position
-            onCharacterPositionUpdate?.(vrm.scene.position)
+            handleCharacterPositionUpdate(vrm.scene.position)
 
             // Load idle animation
             try {
@@ -183,7 +193,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           cameraControls.update()
           
           // Notify parent about camera changes
-          onCameraUpdate?.(camera)
+          handleCameraUpdate(camera)
           
           // Update camera follower
           if (cameraFollower) {
@@ -241,7 +251,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
     return () => {
       if (cleanup) cleanup()
     }
-  }, [modelPath, followCamera])
+  }, [modelPath, followCamera, handleCameraUpdate, handleCharacterPositionUpdate])
 
   if (!isMounted) {
     return (

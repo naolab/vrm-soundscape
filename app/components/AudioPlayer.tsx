@@ -8,7 +8,7 @@ import { useDistanceVolumeControl } from '../hooks/useDistanceVolumeControl'
 
 interface AudioPlayerProps {
   onVolumeChange?: (volume: number) => void
-  camera?: THREE.Camera
+  camera?: THREE.PerspectiveCamera
   characterPosition?: THREE.Vector3
 }
 
@@ -66,6 +66,7 @@ export function AudioPlayer({ onVolumeChange, camera, characterPosition }: Audio
     onVolumeChange?.(0)
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current)
+      animationRef.current = null
     }
   }
 
