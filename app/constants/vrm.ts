@@ -19,5 +19,5 @@ export const VRM_CONFIG = {
       INTENSITY: Math.PI * 0.2
     }
   },
-  DEFAULT_MODEL_PATH: '/models/monet.vrm'
+  DEFAULT_MODEL_PATH: '/models/Monet_Sample_A.vrm'
 } as const

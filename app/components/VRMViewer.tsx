@@ -12,11 +12,13 @@ import { CameraFollower } from '../features/camera/CameraFollower'
 interface VRMViewerProps {
   modelPath?: string
   followCamera?: boolean
+  lipSyncVolume?: number
 }
 
 export const VRMViewer: React.FC<VRMViewerProps> = ({ 
   modelPath = VRM_CONFIG.DEFAULT_MODEL_PATH,
-  followCamera = false
+  followCamera = false,
+  lipSyncVolume = 0
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -97,6 +99,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         let autoLookAt: AutoLookAt | null = null
         let mixer: THREE.AnimationMixer | null = null
         let cameraFollower: CameraFollower | null = null
+        let mouthExpressionName: string | null = null
         const clock = new THREE.Clock()
 
         loader.load(
@@ -107,9 +110,19 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
             // Setup VRM model
             setupVRMModel(vrm)
 
-            // Initialize auto blink if expressionManager exists
+            // Initialize auto blink and find mouth expression
             if (hasExpressionManager(vrm)) {
               autoBlink = new AutoBlink(vrm.expressionManager)
+              
+              // Find available mouth expression
+              const expressions = Object.keys(vrm.expressionManager.expressions)
+              const mouthCandidates = ['aa', 'A', 'a', 'mouth_a', 'mouth_aa', 'Aa', 'oh', 'O', 'o']
+              for (const candidate of mouthCandidates) {
+                if (expressions.includes(candidate)) {
+                  mouthExpressionName = candidate
+                  break
+                }
+              }
             }
 
             // Initialize auto look-at system
@@ -169,6 +182,13 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           // Update VRM and auto blink
           if (vrm) {
             vrm.update(deltaTime)
+            
+            // Apply lip sync
+            if (vrm.expressionManager && mouthExpressionName && lipSyncVolume > 0) {
+              vrm.expressionManager.setValue(mouthExpressionName, lipSyncVolume * 0.8)
+            } else if (vrm.expressionManager && mouthExpressionName) {
+              vrm.expressionManager.setValue(mouthExpressionName, 0)
+            }
           }
           
           if (autoBlink) {
@@ -210,7 +230,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
     return () => {
       if (cleanup) cleanup()
     }
-  }, [modelPath, followCamera])
+  }, [modelPath, followCamera, lipSyncVolume])
 
   if (!isMounted) {
     return (

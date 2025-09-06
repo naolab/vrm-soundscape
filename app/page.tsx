@@ -5,6 +5,7 @@ import { useSettings } from './hooks/useSettings'
 import { Menu } from './components/Menu'
 import { Settings } from './components/settings'
 import { VRMViewer } from './components/VRMViewer'
+import { AudioPlayer } from './components/AudioPlayer'
 
 export default function Home() {
   const {
@@ -18,6 +19,7 @@ export default function Home() {
   } = useSettings()
   
   const [followCamera, setFollowCamera] = useState(false)
+  const [lipSyncVolume, setLipSyncVolume] = useState(0)
 
   return (
     <>
@@ -27,7 +29,8 @@ export default function Home() {
         position: 'relative',
         ...getBackgroundStyle(currentTheme)
       }}>
-        <VRMViewer followCamera={followCamera} />
+        <VRMViewer followCamera={followCamera} lipSyncVolume={lipSyncVolume} />
+        <AudioPlayer onVolumeChange={setLipSyncVolume} />
         <Menu onOpenSettings={openSettings} />
       </main>
 
