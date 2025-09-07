@@ -11,9 +11,10 @@ interface AudioPlayerProps {
   camera?: THREE.PerspectiveCamera
   characterPosition?: THREE.Vector3
   spatialAudio?: boolean
+  masterVolume?: number
 }
 
-export const AudioPlayer = React.memo<AudioPlayerProps>(({ onVolumeChange, camera, characterPosition, spatialAudio = true }) => {
+export const AudioPlayer = React.memo<AudioPlayerProps>(({ onVolumeChange, camera, characterPosition, spatialAudio = true, masterVolume = 0.5 }) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const lipSyncRef = useRef<LipSync | null>(null)
   const sourceRef = useRef<AudioBufferSourceNode | null>(null)
@@ -29,14 +30,22 @@ export const AudioPlayer = React.memo<AudioPlayerProps>(({ onVolumeChange, camer
     }
   }, [spatialAudio])
 
+  // Update master volume when it changes
+  useEffect(() => {
+    if (lipSyncRef.current) {
+      lipSyncRef.current.setMasterVolume(masterVolume)
+    }
+  }, [masterVolume])
+
   const play = useCallback(async () => {
     try {
       if (!lipSyncRef.current) {
         lipSyncRef.current = new LipSync()
       }
 
-      // Set spatial audio state
+      // Set spatial audio state and master volume
       lipSyncRef.current.setSpatialEnabled(spatialAudio)
+      lipSyncRef.current.setMasterVolume(masterVolume)
 
       const source = await lipSyncRef.current.startAnalysis('/audio/test.wav')
       if (!source) return
@@ -67,7 +76,7 @@ export const AudioPlayer = React.memo<AudioPlayerProps>(({ onVolumeChange, camer
     } catch (error) {
       setIsPlaying(false)
     }
-  }, [spatialAudio, onVolumeChange])
+  }, [spatialAudio, masterVolume, onVolumeChange])
 
   const stop = useCallback(() => {
     if (sourceRef.current) {

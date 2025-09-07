@@ -15,13 +15,15 @@ export default function Home() {
     currentTheme,
     followCamera,
     spatialAudio,
+    volume,
     themes,
     getBackgroundStyle,
     openSettings,
     closeSettings,
     changeTheme,
     changeFollowCamera,
-    changeSpatialAudio
+    changeSpatialAudio,
+    changeVolume
   } = useSettings()
   const [lipSyncVolume, setLipSyncVolume] = useState(0)
   const [camera, setCamera] = useState<THREE.PerspectiveCamera | null>(null)
@@ -62,6 +64,7 @@ export default function Home() {
           camera={camera}
           characterPosition={characterPosition}
           spatialAudio={spatialAudio}
+          masterVolume={volume}
         />
         <Menu onOpenSettings={openSettings} />
       </main>
@@ -72,10 +75,12 @@ export default function Home() {
           currentTheme={currentTheme}
           followCamera={followCamera}
           spatialAudio={spatialAudio}
+          volume={volume}
           onClose={closeSettings}
           onThemeChange={changeTheme}
           onFollowCameraChange={changeFollowCamera}
           onSpatialAudioChange={changeSpatialAudio}
+          onVolumeChange={changeVolume}
         />
       )}
     </>

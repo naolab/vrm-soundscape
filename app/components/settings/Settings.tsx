@@ -10,10 +10,12 @@ interface SettingsProps {
   currentTheme: Theme
   followCamera: boolean
   spatialAudio: boolean
+  volume: number
   onClose: () => void
   onThemeChange: (theme: Theme) => void
   onFollowCameraChange: (value: boolean) => void
   onSpatialAudioChange: (value: boolean) => void
+  onVolumeChange: (value: number) => void
 }
 
 export const Settings: React.FC<SettingsProps> = ({
@@ -21,10 +23,12 @@ export const Settings: React.FC<SettingsProps> = ({
   currentTheme,
   followCamera,
   spatialAudio,
+  volume,
   onClose,
   onThemeChange,
   onFollowCameraChange,
-  onSpatialAudioChange
+  onSpatialAudioChange,
+  onVolumeChange
 }) => {
   return (
     <div style={{
@@ -88,7 +92,9 @@ export const Settings: React.FC<SettingsProps> = ({
           
           <AudioSettings
             spatialAudio={spatialAudio}
+            volume={volume}
             onSpatialAudioChange={onSpatialAudioChange}
+            onVolumeChange={onVolumeChange}
           />
           
           <ThemeSettings

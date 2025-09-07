@@ -8,6 +8,7 @@ export class LipSync {
   private gainNode: GainNode | null = null
   private pannerNode: PannerNode | null = null
   private spatialEnabled: boolean = AUDIO_CONFIG.SPATIAL.ENABLED
+  private masterVolume: number = 0.5
 
   public async startAnalysis(audioUrl: string): Promise<AudioBufferSourceNode | null> {
     try {
@@ -23,6 +24,7 @@ export class LipSync {
 
       // Create gain node for volume control
       this.gainNode = this.audioContext.createGain()
+      this.gainNode.gain.value = this.masterVolume
       
       // Create panner node for 3D spatial audio
       this.pannerNode = this.audioContext.createPanner()
@@ -90,7 +92,10 @@ export class LipSync {
     // exp(-k*x) where k controls steepness
     const decayFactor = 4 // Higher = steeper near-field decay
     const exponentialDecay = Math.exp(-decayFactor * normalizedDistance)
-    const volume = Math.max(MIN_VOLUME, MIN_VOLUME + (MAX_VOLUME - MIN_VOLUME) * exponentialDecay)
+    const baseVolume = Math.max(MIN_VOLUME, MIN_VOLUME + (MAX_VOLUME - MIN_VOLUME) * exponentialDecay)
+    
+    // Apply master volume
+    const volume = baseVolume * this.masterVolume
 
     // Smooth volume transition
     const currentTime = this.audioContext.currentTime
@@ -178,5 +183,18 @@ export class LipSync {
         this.gainNode.connect(this.audioContext.destination)
       }
     }
+  }
+
+  public setMasterVolume(volume: number): void {
+    this.masterVolume = Math.max(0, Math.min(1, volume))
+    
+    // If spatial audio is not enabled, update volume directly
+    if (!this.spatialEnabled && this.gainNode && this.audioContext) {
+      const currentTime = this.audioContext.currentTime
+      this.gainNode.gain.cancelScheduledValues(currentTime)
+      this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, currentTime)
+      this.gainNode.gain.linearRampToValueAtTime(this.masterVolume, currentTime + 0.05)
+    }
+    // If spatial audio is enabled, the volume will be updated through setVolumeByDistance
   }
 }
