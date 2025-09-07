@@ -16,8 +16,8 @@ export const AUDIO_CONFIG = {
   },
   SPATIAL: {
     ENABLED: true,      // Enable spatial audio by default
-    PANNING_MODEL: 'HRTF' as PanningModelType, // HRTF for realistic 3D audio
-    DISTANCE_MODEL: 'exponential' as DistanceModelType, // Matches our volume control
+    PANNING_MODEL: 'HRTF' as const, // HRTF for realistic 3D audio
+    DISTANCE_MODEL: 'exponential' as const, // Matches our volume control
     REF_DISTANCE: 1,    // Reference distance for sound attenuation
     MAX_DISTANCE: 10,   // Maximum distance for spatial audio
     ROLLOFF_FACTOR: 2,  // How quickly volume decreases with distance

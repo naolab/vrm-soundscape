@@ -4,8 +4,3 @@ export interface ThemeOption {
   value: Theme
   color: string
 }
-
-export interface SettingsState {
-  showSettings: boolean
-  currentTheme: Theme
-}

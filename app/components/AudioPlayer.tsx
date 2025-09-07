@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import * as THREE from 'three'
 import { LipSync } from '../lib/LipSync'
 import { UI_STYLES } from '../constants/ui'
@@ -13,7 +13,7 @@ interface AudioPlayerProps {
   spatialAudio?: boolean
 }
 
-export function AudioPlayer({ onVolumeChange, camera, characterPosition, spatialAudio = true }: AudioPlayerProps) {
+export const AudioPlayer = React.memo<AudioPlayerProps>(({ onVolumeChange, camera, characterPosition, spatialAudio = true }) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const lipSyncRef = useRef<LipSync | null>(null)
   const sourceRef = useRef<AudioBufferSourceNode | null>(null)
@@ -29,7 +29,7 @@ export function AudioPlayer({ onVolumeChange, camera, characterPosition, spatial
     }
   }, [spatialAudio])
 
-  const play = async () => {
+  const play = useCallback(async () => {
     try {
       if (!lipSyncRef.current) {
         lipSyncRef.current = new LipSync()
@@ -67,9 +67,9 @@ export function AudioPlayer({ onVolumeChange, camera, characterPosition, spatial
     } catch (error) {
       setIsPlaying(false)
     }
-  }
+  }, [spatialAudio, onVolumeChange])
 
-  const stop = () => {
+  const stop = useCallback(() => {
     if (sourceRef.current) {
       sourceRef.current.stop()
     }
@@ -79,7 +79,7 @@ export function AudioPlayer({ onVolumeChange, camera, characterPosition, spatial
       cancelAnimationFrame(animationRef.current)
       animationRef.current = null
     }
-  }
+  }, [onVolumeChange])
 
   return (
     <button
@@ -93,4 +93,4 @@ export function AudioPlayer({ onVolumeChange, camera, characterPosition, spatial
       {isPlaying ? '⏸' : '▶'}
     </button>
   )
-}
+})

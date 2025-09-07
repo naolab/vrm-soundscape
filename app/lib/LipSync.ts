@@ -7,7 +7,6 @@ export class LipSync {
   private dataArray: Float32Array | null = null
   private gainNode: GainNode | null = null
   private pannerNode: PannerNode | null = null
-  private listenerNode: AudioListener | null = null
   private spatialEnabled: boolean = AUDIO_CONFIG.SPATIAL.ENABLED
 
   public async startAnalysis(audioUrl: string): Promise<AudioBufferSourceNode | null> {
@@ -36,8 +35,6 @@ export class LipSync {
       this.pannerNode.coneOuterAngle = AUDIO_CONFIG.SPATIAL.CONE_OUTER_ANGLE
       this.pannerNode.coneOuterGain = AUDIO_CONFIG.SPATIAL.CONE_OUTER_GAIN
       
-      // Create audio listener (represents the user/camera)
-      this.listenerNode = this.audioContext.listener
 
       const source = this.audioContext.createBufferSource()
       source.buffer = audioBuffer
@@ -106,18 +103,20 @@ export class LipSync {
     camera: THREE.PerspectiveCamera,
     characterPosition: THREE.Vector3
   ): void {
-    if (!this.pannerNode || !this.listenerNode || !this.audioContext || !this.spatialEnabled) return
+    if (!this.pannerNode || !this.audioContext || !this.spatialEnabled) return
+
+    const listener = this.audioContext.listener
 
     // Update listener position (camera/user position)
     const listenerPos = camera.position
-    if (this.listenerNode.positionX) {
+    if (listener.positionX) {
       // Use new API if available
       const currentTime = this.audioContext.currentTime
       const smoothingTime = currentTime + AUDIO_CONFIG.SPATIAL.POSITION_SMOOTHING
       
-      this.listenerNode.positionX.linearRampToValueAtTime(listenerPos.x, smoothingTime)
-      this.listenerNode.positionY.linearRampToValueAtTime(listenerPos.y, smoothingTime)
-      this.listenerNode.positionZ.linearRampToValueAtTime(listenerPos.z, smoothingTime)
+      listener.positionX.linearRampToValueAtTime(listenerPos.x, smoothingTime)
+      listener.positionY.linearRampToValueAtTime(listenerPos.y, smoothingTime)
+      listener.positionZ.linearRampToValueAtTime(listenerPos.z, smoothingTime)
       
       // Update listener orientation (where the camera is looking)
       const forward = new THREE.Vector3(0, 0, -1)
@@ -125,22 +124,22 @@ export class LipSync {
       forward.applyQuaternion(camera.quaternion)
       up.applyQuaternion(camera.quaternion)
       
-      this.listenerNode.forwardX.linearRampToValueAtTime(forward.x, smoothingTime)
-      this.listenerNode.forwardY.linearRampToValueAtTime(forward.y, smoothingTime)
-      this.listenerNode.forwardZ.linearRampToValueAtTime(forward.z, smoothingTime)
-      this.listenerNode.upX.linearRampToValueAtTime(up.x, smoothingTime)
-      this.listenerNode.upY.linearRampToValueAtTime(up.y, smoothingTime)
-      this.listenerNode.upZ.linearRampToValueAtTime(up.z, smoothingTime)
+      listener.forwardX.linearRampToValueAtTime(forward.x, smoothingTime)
+      listener.forwardY.linearRampToValueAtTime(forward.y, smoothingTime)
+      listener.forwardZ.linearRampToValueAtTime(forward.z, smoothingTime)
+      listener.upX.linearRampToValueAtTime(up.x, smoothingTime)
+      listener.upY.linearRampToValueAtTime(up.y, smoothingTime)
+      listener.upZ.linearRampToValueAtTime(up.z, smoothingTime)
     } else {
       // Fallback for older browsers
-      this.listenerNode.setPosition(listenerPos.x, listenerPos.y, listenerPos.z)
+      listener.setPosition(listenerPos.x, listenerPos.y, listenerPos.z)
       
       const forward = new THREE.Vector3(0, 0, -1)
       const up = new THREE.Vector3(0, 1, 0)
       forward.applyQuaternion(camera.quaternion)
       up.applyQuaternion(camera.quaternion)
       
-      this.listenerNode.setOrientation(
+      listener.setOrientation(
         forward.x, forward.y, forward.z,
         up.x, up.y, up.z
       )

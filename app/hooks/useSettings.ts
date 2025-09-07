@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Theme, SettingsState, ThemeOption } from '../types/settings'
+import { Theme, ThemeOption } from '../types/settings'
 
 const STORAGE_KEY = 'vrm-soundscape-settings'
 
