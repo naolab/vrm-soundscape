@@ -3,8 +3,8 @@ import { Theme, SettingsState, ThemeOption } from '../types/settings'
 
 const STORAGE_KEY = 'vrm-soundscape-settings'
 
-const loadSettings = (): { theme: Theme; followCamera: boolean } => {
-  if (typeof window === 'undefined') return { theme: 'blue', followCamera: false }
+const loadSettings = (): { theme: Theme; followCamera: boolean; spatialAudio: boolean } => {
+  if (typeof window === 'undefined') return { theme: 'blue', followCamera: false, spatialAudio: true }
   
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -12,21 +12,22 @@ const loadSettings = (): { theme: Theme; followCamera: boolean } => {
       const parsed = JSON.parse(saved)
       return {
         theme: parsed.theme || 'blue',
-        followCamera: parsed.followCamera || false
+        followCamera: parsed.followCamera || false,
+        spatialAudio: parsed.spatialAudio !== undefined ? parsed.spatialAudio : true
       }
     }
   } catch (error) {
     console.warn('Failed to load settings from localStorage:', error)
   }
   
-  return { theme: 'blue', followCamera: false }
+  return { theme: 'blue', followCamera: false, spatialAudio: true }
 }
 
-const saveSettings = (theme: Theme, followCamera: boolean): void => {
+const saveSettings = (theme: Theme, followCamera: boolean, spatialAudio: boolean): void => {
   if (typeof window === 'undefined') return
   
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ theme, followCamera }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ theme, followCamera, spatialAudio }))
   } catch (error) {
     console.warn('Failed to save settings to localStorage:', error)
   }
@@ -36,12 +37,14 @@ export const useSettings = () => {
   const [showSettings, setShowSettings] = useState(false)
   const [currentTheme, setCurrentTheme] = useState<Theme>('blue')
   const [followCamera, setFollowCamera] = useState(false)
+  const [spatialAudio, setSpatialAudio] = useState(true)
 
   // Load settings on mount
   useEffect(() => {
     const settings = loadSettings()
     setCurrentTheme(settings.theme)
     setFollowCamera(settings.followCamera)
+    setSpatialAudio(settings.spatialAudio)
   }, [])
 
   const themes: ThemeOption[] = [
@@ -71,23 +74,30 @@ export const useSettings = () => {
 
   const changeTheme = useCallback((theme: Theme) => {
     setCurrentTheme(theme)
-    saveSettings(theme, followCamera)
-  }, [followCamera])
+    saveSettings(theme, followCamera, spatialAudio)
+  }, [followCamera, spatialAudio])
 
   const changeFollowCamera = useCallback((newFollowCamera: boolean) => {
     setFollowCamera(newFollowCamera)
-    saveSettings(currentTheme, newFollowCamera)
-  }, [currentTheme])
+    saveSettings(currentTheme, newFollowCamera, spatialAudio)
+  }, [currentTheme, spatialAudio])
+
+  const changeSpatialAudio = useCallback((newSpatialAudio: boolean) => {
+    setSpatialAudio(newSpatialAudio)
+    saveSettings(currentTheme, followCamera, newSpatialAudio)
+  }, [currentTheme, followCamera])
 
   return {
     showSettings,
     currentTheme,
     followCamera,
+    spatialAudio,
     themes,
     getBackgroundStyle,
     openSettings,
     closeSettings,
     changeTheme,
-    changeFollowCamera
+    changeFollowCamera,
+    changeSpatialAudio
   }
 }

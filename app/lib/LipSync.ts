@@ -1,10 +1,14 @@
 import { AUDIO_CONFIG } from '../constants/audio'
+import * as THREE from 'three'
 
 export class LipSync {
   private audioContext: AudioContext | null = null
   private analyser: AnalyserNode | null = null
   private dataArray: Float32Array | null = null
   private gainNode: GainNode | null = null
+  private pannerNode: PannerNode | null = null
+  private listenerNode: AudioListener | null = null
+  private spatialEnabled: boolean = AUDIO_CONFIG.SPATIAL.ENABLED
 
   public async startAnalysis(audioUrl: string): Promise<AudioBufferSourceNode | null> {
     try {
@@ -20,14 +24,35 @@ export class LipSync {
 
       // Create gain node for volume control
       this.gainNode = this.audioContext.createGain()
+      
+      // Create panner node for 3D spatial audio
+      this.pannerNode = this.audioContext.createPanner()
+      this.pannerNode.panningModel = AUDIO_CONFIG.SPATIAL.PANNING_MODEL
+      this.pannerNode.distanceModel = AUDIO_CONFIG.SPATIAL.DISTANCE_MODEL
+      this.pannerNode.refDistance = AUDIO_CONFIG.SPATIAL.REF_DISTANCE
+      this.pannerNode.maxDistance = AUDIO_CONFIG.SPATIAL.MAX_DISTANCE
+      this.pannerNode.rolloffFactor = AUDIO_CONFIG.SPATIAL.ROLLOFF_FACTOR
+      this.pannerNode.coneInnerAngle = AUDIO_CONFIG.SPATIAL.CONE_INNER_ANGLE
+      this.pannerNode.coneOuterAngle = AUDIO_CONFIG.SPATIAL.CONE_OUTER_ANGLE
+      this.pannerNode.coneOuterGain = AUDIO_CONFIG.SPATIAL.CONE_OUTER_GAIN
+      
+      // Create audio listener (represents the user/camera)
+      this.listenerNode = this.audioContext.listener
 
       const source = this.audioContext.createBufferSource()
       source.buffer = audioBuffer
       
-      // Connect: source -> gainNode -> destination
+      // Connect: source -> gainNode -> pannerNode -> destination
       // Also connect source -> analyser for volume analysis
       source.connect(this.gainNode)
-      this.gainNode.connect(this.audioContext.destination)
+      
+      if (this.spatialEnabled && this.pannerNode) {
+        this.gainNode.connect(this.pannerNode)
+        this.pannerNode.connect(this.audioContext.destination)
+      } else {
+        this.gainNode.connect(this.audioContext.destination)
+      }
+      
       source.connect(this.analyser)
 
       return source
@@ -75,5 +100,84 @@ export class LipSync {
     this.gainNode.gain.cancelScheduledValues(currentTime)
     this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, currentTime)
     this.gainNode.gain.linearRampToValueAtTime(volume, currentTime + SMOOTHING_DURATION)
+  }
+
+  public updateSpatialPosition(
+    camera: THREE.PerspectiveCamera,
+    characterPosition: THREE.Vector3
+  ): void {
+    if (!this.pannerNode || !this.listenerNode || !this.audioContext || !this.spatialEnabled) return
+
+    // Update listener position (camera/user position)
+    const listenerPos = camera.position
+    if (this.listenerNode.positionX) {
+      // Use new API if available
+      const currentTime = this.audioContext.currentTime
+      const smoothingTime = currentTime + AUDIO_CONFIG.SPATIAL.POSITION_SMOOTHING
+      
+      this.listenerNode.positionX.linearRampToValueAtTime(listenerPos.x, smoothingTime)
+      this.listenerNode.positionY.linearRampToValueAtTime(listenerPos.y, smoothingTime)
+      this.listenerNode.positionZ.linearRampToValueAtTime(listenerPos.z, smoothingTime)
+      
+      // Update listener orientation (where the camera is looking)
+      const forward = new THREE.Vector3(0, 0, -1)
+      const up = new THREE.Vector3(0, 1, 0)
+      forward.applyQuaternion(camera.quaternion)
+      up.applyQuaternion(camera.quaternion)
+      
+      this.listenerNode.forwardX.linearRampToValueAtTime(forward.x, smoothingTime)
+      this.listenerNode.forwardY.linearRampToValueAtTime(forward.y, smoothingTime)
+      this.listenerNode.forwardZ.linearRampToValueAtTime(forward.z, smoothingTime)
+      this.listenerNode.upX.linearRampToValueAtTime(up.x, smoothingTime)
+      this.listenerNode.upY.linearRampToValueAtTime(up.y, smoothingTime)
+      this.listenerNode.upZ.linearRampToValueAtTime(up.z, smoothingTime)
+    } else {
+      // Fallback for older browsers
+      this.listenerNode.setPosition(listenerPos.x, listenerPos.y, listenerPos.z)
+      
+      const forward = new THREE.Vector3(0, 0, -1)
+      const up = new THREE.Vector3(0, 1, 0)
+      forward.applyQuaternion(camera.quaternion)
+      up.applyQuaternion(camera.quaternion)
+      
+      this.listenerNode.setOrientation(
+        forward.x, forward.y, forward.z,
+        up.x, up.y, up.z
+      )
+    }
+
+    // Update sound source position (character position)
+    if (this.pannerNode.positionX) {
+      // Use new API if available
+      const currentTime = this.audioContext.currentTime
+      const smoothingTime = currentTime + AUDIO_CONFIG.SPATIAL.POSITION_SMOOTHING
+      
+      this.pannerNode.positionX.linearRampToValueAtTime(characterPosition.x, smoothingTime)
+      this.pannerNode.positionY.linearRampToValueAtTime(characterPosition.y, smoothingTime)
+      this.pannerNode.positionZ.linearRampToValueAtTime(characterPosition.z, smoothingTime)
+    } else {
+      // Fallback for older browsers
+      this.pannerNode.setPosition(
+        characterPosition.x,
+        characterPosition.y,
+        characterPosition.z
+      )
+    }
+  }
+
+  public setSpatialEnabled(enabled: boolean): void {
+    this.spatialEnabled = enabled
+    
+    // Reconnect audio nodes based on spatial audio setting
+    if (this.gainNode && this.pannerNode && this.audioContext) {
+      this.gainNode.disconnect()
+      
+      if (enabled) {
+        this.gainNode.connect(this.pannerNode)
+        this.pannerNode.connect(this.audioContext.destination)
+      } else {
+        this.gainNode.connect(this.audioContext.destination)
+      }
+    }
   }
 }

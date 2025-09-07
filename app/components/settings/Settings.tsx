@@ -3,23 +3,28 @@ import { Theme, ThemeOption } from '../../types/settings'
 import { Button } from '../ui'
 import { ThemeSettings } from './ThemeSettings'
 import { CameraSettings } from './CameraSettings'
+import { AudioSettings } from './AudioSettings'
 
 interface SettingsProps {
   themes: ThemeOption[]
   currentTheme: Theme
   followCamera: boolean
+  spatialAudio: boolean
   onClose: () => void
   onThemeChange: (theme: Theme) => void
   onFollowCameraChange: (value: boolean) => void
+  onSpatialAudioChange: (value: boolean) => void
 }
 
 export const Settings: React.FC<SettingsProps> = ({
   themes,
   currentTheme,
   followCamera,
+  spatialAudio,
   onClose,
   onThemeChange,
-  onFollowCameraChange
+  onFollowCameraChange,
+  onSpatialAudioChange
 }) => {
   return (
     <div style={{
@@ -79,6 +84,11 @@ export const Settings: React.FC<SettingsProps> = ({
           <CameraSettings
             followCamera={followCamera}
             onFollowCameraChange={onFollowCameraChange}
+          />
+          
+          <AudioSettings
+            spatialAudio={spatialAudio}
+            onSpatialAudioChange={onSpatialAudioChange}
           />
           
           <ThemeSettings

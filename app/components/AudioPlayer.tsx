@@ -10,9 +10,10 @@ interface AudioPlayerProps {
   onVolumeChange?: (volume: number) => void
   camera?: THREE.PerspectiveCamera
   characterPosition?: THREE.Vector3
+  spatialAudio?: boolean
 }
 
-export function AudioPlayer({ onVolumeChange, camera, characterPosition }: AudioPlayerProps) {
+export function AudioPlayer({ onVolumeChange, camera, characterPosition, spatialAudio = true }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const lipSyncRef = useRef<LipSync | null>(null)
   const sourceRef = useRef<AudioBufferSourceNode | null>(null)
@@ -21,11 +22,21 @@ export function AudioPlayer({ onVolumeChange, camera, characterPosition }: Audio
   // Use optimized distance-based volume control
   useDistanceVolumeControl(lipSyncRef, isPlaying, camera, characterPosition)
 
+  // Update spatial audio setting when it changes
+  useEffect(() => {
+    if (lipSyncRef.current) {
+      lipSyncRef.current.setSpatialEnabled(spatialAudio)
+    }
+  }, [spatialAudio])
+
   const play = async () => {
     try {
       if (!lipSyncRef.current) {
         lipSyncRef.current = new LipSync()
       }
+
+      // Set spatial audio state
+      lipSyncRef.current.setSpatialEnabled(spatialAudio)
 
       const source = await lipSyncRef.current.startAnalysis('/audio/test.wav')
       if (!source) return
