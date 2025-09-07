@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react'
 import * as THREE from 'three'
 import { VRM_CONFIG } from '../constants/vrm'
+import { LIP_SYNC_CONFIG } from '../constants/lipSync'
 import { AutoBlink } from '../features/animation/AutoBlink'
 import { VRMModel, VRMLoadResult } from '../types/vrm'
 import { setupVRMModel, hasExpressionManager } from '../utils/vrmSetup'
@@ -222,12 +223,11 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
             // Update lip sync using pre-determined mouth expression
             if (vrm.expressionManager && mouthExpressionName) {
               // Map input volume [0,1] with volume multiplier (ChatVRM方式)
-              const volumeMultiplier = 0.5  // 50%に制限して自然な口の動きに
-              const target = Math.max(0, Math.min(1, lipSyncVolumeRef.current * volumeMultiplier))
+              const target = Math.max(0, Math.min(1, lipSyncVolumeRef.current * LIP_SYNC_CONFIG.VOLUME_MULTIPLIER))
               // Keep lightweight smoothing via previous value stored on manager
               // (fall back to target when not present)
               const prev = (vrm.expressionManager as any).__mouthPrev ?? 0
-              const smoothed = prev + (target - prev) * 0.25
+              const smoothed = prev + (target - prev) * LIP_SYNC_CONFIG.SMOOTHING_FACTOR
               ;(vrm.expressionManager as any).__mouthPrev = smoothed
               vrm.expressionManager.setValue(mouthExpressionName, smoothed)
             }

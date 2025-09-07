@@ -1,4 +1,5 @@
 import { AUDIO_CONFIG } from '../constants/audio'
+import { LIP_SYNC_CONFIG } from '../constants/lipSync'
 import * as THREE from 'three'
 
 export class LipSync {
@@ -8,7 +9,7 @@ export class LipSync {
   private gainNode: GainNode | null = null
   private pannerNode: PannerNode | null = null
   private spatialEnabled: boolean = AUDIO_CONFIG.SPATIAL.ENABLED
-  private masterVolume: number = 0.5
+  private masterVolume: number = LIP_SYNC_CONFIG.DEFAULT_MASTER_VOLUME
 
   public async startAnalysis(audioUrl: string): Promise<AudioBufferSourceNode | null> {
     try {
@@ -193,7 +194,7 @@ export class LipSync {
       const currentTime = this.audioContext.currentTime
       this.gainNode.gain.cancelScheduledValues(currentTime)
       this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, currentTime)
-      this.gainNode.gain.linearRampToValueAtTime(this.masterVolume, currentTime + 0.05)
+      this.gainNode.gain.linearRampToValueAtTime(this.masterVolume, currentTime + LIP_SYNC_CONFIG.VOLUME_TRANSITION_TIME)
     }
     // If spatial audio is enabled, the volume will be updated through setVolumeByDistance
   }
