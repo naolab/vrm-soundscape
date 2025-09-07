@@ -43,7 +43,8 @@ export const useSettings = () => {
   useEffect(() => {
     const settings = loadSettings()
     setCurrentTheme(settings.theme)
-    setFollowCamera(settings.followCamera)
+    // Always set followCamera to false on reload
+    setFollowCamera(false)
     setSpatialAudio(settings.spatialAudio)
   }, [])
 
