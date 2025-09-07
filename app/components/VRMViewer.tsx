@@ -221,8 +221,9 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           if (vrm) {
             // Update lip sync using pre-determined mouth expression
             if (vrm.expressionManager && mouthExpressionName) {
-              // Map input volume [0,1] directly with light smoothing
-              const target = Math.max(0, Math.min(1, lipSyncVolumeRef.current))
+              // Map input volume [0,1] with volume multiplier (ChatVRM方式)
+              const volumeMultiplier = 0.5  // 50%に制限して自然な口の動きに
+              const target = Math.max(0, Math.min(1, lipSyncVolumeRef.current * volumeMultiplier))
               // Keep lightweight smoothing via previous value stored on manager
               // (fall back to target when not present)
               const prev = (vrm.expressionManager as any).__mouthPrev ?? 0
