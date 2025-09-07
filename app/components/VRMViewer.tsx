@@ -29,6 +29,12 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
+  const lipSyncVolumeRef = useRef(0)
+
+  // Keep latest lipSync volume available inside animation loop
+  useEffect(() => {
+    lipSyncVolumeRef.current = lipSyncVolume ?? 0
+  }, [lipSyncVolume])
 
   // Memoize camera update callback to prevent unnecessary re-renders
   const handleCameraUpdate = useCallback((camera: THREE.PerspectiveCamera) => {
@@ -130,14 +136,24 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
             // Initialize auto blink and find mouth expression
             if (hasExpressionManager(vrm)) {
               autoBlink = new AutoBlink(vrm.expressionManager)
-              
-              // Find available mouth expression
-              const expressions = Object.keys(vrm.expressionManager.expressions)
-              for (const candidate of VRM_CONFIG.MOUTH_EXPRESSION_CANDIDATES) {
-                if (expressions.includes(candidate)) {
-                  mouthExpressionName = candidate
+
+              // Find available mouth expression reliably
+              const em = vrm.expressionManager
+              const tryNames: string[] = [
+                ...VRM_CONFIG.MOUTH_EXPRESSION_CANDIDATES,
+                // Include manager-suggested names if available (aa, ee, ih, oh, ou)
+                ...((em as any).mouthExpressionNames ?? [])
+              ]
+              for (const name of tryNames) {
+                if (typeof em.getExpression === 'function' && em.getExpression(name)) {
+                  mouthExpressionName = name
                   break
                 }
+              }
+
+              // Fallback to 'aa' if nothing matched (some models still accept it)
+              if (!mouthExpressionName && typeof em.getExpression === 'function' && em.getExpression('aa')) {
+                mouthExpressionName = 'aa'
               }
             }
 
@@ -183,12 +199,12 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           animationId = requestAnimationFrame(animate)
           
           const deltaTime = clock.getDelta()
-          
-          // Update animation mixer first
+
+          // Update animation mixer first (affects poses/expressions from clips)
           if (mixer) {
             mixer.update(deltaTime)
           }
-          
+
           // Update camera controls
           cameraControls.update()
           
@@ -201,15 +217,24 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
             cameraFollower.update()
           }
           
-          // Update VRM and auto blink
+          // Update VRM expressions (lip sync) before vrm.update for this frame
           if (vrm) {
-            vrm.update(deltaTime)
-            
             // Update lip sync using pre-determined mouth expression
             if (vrm.expressionManager && mouthExpressionName) {
-              const testWeight = lipSyncVolume > 0.001 ? 1.0 : 0
-              vrm.expressionManager.setValue(mouthExpressionName, testWeight)
+              // Map input volume [0,1] directly with light smoothing
+              const target = Math.max(0, Math.min(1, lipSyncVolumeRef.current))
+              // Keep lightweight smoothing via previous value stored on manager
+              // (fall back to target when not present)
+              const prev = (vrm.expressionManager as any).__mouthPrev ?? 0
+              const smoothed = prev + (target - prev) * 0.25
+              ;(vrm.expressionManager as any).__mouthPrev = smoothed
+              vrm.expressionManager.setValue(mouthExpressionName, smoothed)
             }
+          }
+
+          // Update VRM (applies expression weights and animations)
+          if (vrm) {
+            vrm.update(deltaTime)
           }
           
           if (autoBlink) {

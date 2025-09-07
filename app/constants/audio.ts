@@ -2,9 +2,9 @@ export const AUDIO_CONFIG = {
   LIP_SYNC: {
     FFT_SIZE: 2048,
     SIGMOID: {
-      MULTIPLIER: -45,
-      OFFSET: 5,
-      THRESHOLD: 0.1
+      MULTIPLIER: -35,
+      OFFSET: 3.5,
+      THRESHOLD: 0.02
     }
   },
   DISTANCE: {
