@@ -91,11 +91,6 @@ export const VRMViewer: React.FC<VRMViewerProps> = React.memo(({
         renderer.shadowMap.enabled = true
         renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
-        // Additional performance settings
-        renderer.outputColorSpace = THREE.SRGBColorSpace
-        renderer.toneMapping = THREE.ACESFilmicToneMapping
-        renderer.toneMappingExposure = 1.0
-
         // Enable frustum culling and automatic clearing
         renderer.autoClear = true
         renderer.autoClearColor = true
