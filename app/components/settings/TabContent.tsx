@@ -137,12 +137,13 @@ export const TabContent: React.FC<TabContentProps> = ({
   return (
     <div style={{
       flex: 1,
-      padding: '40px 48px',
+      padding: window.innerWidth < 768 ? '24px 20px' : '32px 40px',
       overflowY: 'auto',
-      maxHeight: '100vh',
-      backgroundColor: '#ffffff',
-      borderRadius: '0 12px 12px 0',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+      maxHeight: '100%',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      borderRadius: window.innerWidth < 768 ? '0 0 12px 12px' : '0 12px 12px 0',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+      minWidth: 0
     }}>
       {renderContent()}
     </div>

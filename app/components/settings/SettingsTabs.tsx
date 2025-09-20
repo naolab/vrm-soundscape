@@ -26,14 +26,16 @@ export const SettingsTabs: React.FC<SettingsTabsProps> = ({
 }) => {
   return (
     <div style={{
-      width: '240px',
-      backgroundColor: 'rgba(128, 90, 213, 0.1)',
+      width: 'clamp(200px, 25%, 240px)',
+      minWidth: '200px',
+      backgroundColor: 'rgba(248, 250, 252, 0.95)',
       borderRight: '1px solid rgba(128, 90, 213, 0.2)',
       borderRadius: '12px 0 0 12px',
       padding: '20px 0',
       display: 'flex',
       flexDirection: 'column',
-      gap: '4px'
+      gap: '4px',
+      flexShrink: 0
     }}>
       {TAB_CONFIG.map((tab) => {
         const IconComponent = tab.icon
@@ -49,16 +51,17 @@ export const SettingsTabs: React.FC<SettingsTabsProps> = ({
               border: 'none',
               borderLeft: isActive ? '4px solid #805ad5' : '4px solid transparent',
               color: isActive ? '#805ad5' : 'rgba(0, 0, 0, 0.8)',
-              fontSize: '16px',
+              fontSize: 'clamp(14px, 2.5vw, 16px)',
               fontWeight: isActive ? '600' : 'normal',
               cursor: 'pointer',
               textAlign: 'left',
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: 'clamp(8px, 2vw, 12px)',
               transition: 'all 0.2s ease',
               margin: '0',
-              borderRadius: '0'
+              borderRadius: '0',
+              minHeight: '48px'
             }}
             onMouseEnter={(e) => {
               if (!isActive) {
