@@ -5,6 +5,8 @@ import { ThemeSettings } from './ThemeSettings'
 import { CameraSettings } from './CameraSettings'
 import { AudioSettings } from './AudioSettings'
 import { VRMSettings } from './VRMSettings'
+import { AudioFileSettings } from './AudioFileSettings'
+import { AudioFile } from '../../types/audio'
 
 interface SettingsProps {
   themes: ThemeOption[]
@@ -14,12 +16,16 @@ interface SettingsProps {
   volume: number
   vrmFileName?: string
   isVRMLoading?: boolean
+  audioFiles: AudioFile[]
+  currentPlayingAudio?: string | null
   onClose: () => void
   onThemeChange: (theme: Theme) => void
   onFollowCameraChange: (value: boolean) => void
   onSpatialAudioChange: (value: boolean) => void
   onVolumeChange: (value: number) => void
   onVRMFileChange: (file: File | null) => void
+  onAudioFilesChange: (files: AudioFile[]) => void
+  onPlayAudio: (audioFile: AudioFile) => void
 }
 
 export const Settings: React.FC<SettingsProps> = ({
@@ -30,12 +36,16 @@ export const Settings: React.FC<SettingsProps> = ({
   volume,
   vrmFileName,
   isVRMLoading,
+  audioFiles,
+  currentPlayingAudio,
   onClose,
   onThemeChange,
   onFollowCameraChange,
   onSpatialAudioChange,
   onVolumeChange,
-  onVRMFileChange
+  onVRMFileChange,
+  onAudioFilesChange,
+  onPlayAudio
 }) => {
   return (
     <div style={{
@@ -108,6 +118,14 @@ export const Settings: React.FC<SettingsProps> = ({
             volume={volume}
             onSpatialAudioChange={onSpatialAudioChange}
             onVolumeChange={onVolumeChange}
+          />
+
+          <AudioFileSettings
+            audioFiles={audioFiles}
+            maxFiles={10}
+            onAudioFilesChange={onAudioFilesChange}
+            onPlayAudio={onPlayAudio}
+            isPlaying={currentPlayingAudio}
           />
 
           <ThemeSettings

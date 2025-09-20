@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Theme, ThemeOption } from '../types/settings'
+import { AudioFile } from '../types/audio'
 
 const STORAGE_KEY = 'vrm-soundscape-settings'
 
-const loadSettings = (): { theme: Theme; followCamera: boolean; spatialAudio: boolean; volume: number; customVRMUrl?: string } => {
-  if (typeof window === 'undefined') return { theme: 'blue', followCamera: false, spatialAudio: true, volume: 0.5 }
+const loadSettings = (): { theme: Theme; followCamera: boolean; spatialAudio: boolean; volume: number; customVRMUrl?: string; audioFiles?: AudioFile[] } => {
+  if (typeof window === 'undefined') return { theme: 'blue', followCamera: false, spatialAudio: true, volume: 0.5, audioFiles: [] }
 
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -15,21 +16,22 @@ const loadSettings = (): { theme: Theme; followCamera: boolean; spatialAudio: bo
         followCamera: parsed.followCamera || false,
         spatialAudio: parsed.spatialAudio !== undefined ? parsed.spatialAudio : true,
         volume: parsed.volume !== undefined ? parsed.volume : 0.5,
-        customVRMUrl: parsed.customVRMUrl
+        customVRMUrl: parsed.customVRMUrl,
+        audioFiles: parsed.audioFiles || []
       }
     }
   } catch (error) {
     console.warn('Failed to load settings from localStorage:', error)
   }
 
-  return { theme: 'blue', followCamera: false, spatialAudio: true, volume: 0.5 }
+  return { theme: 'blue', followCamera: false, spatialAudio: true, volume: 0.5, audioFiles: [] }
 }
 
-const saveSettings = (theme: Theme, followCamera: boolean, spatialAudio: boolean, volume: number, customVRMUrl?: string): void => {
+const saveSettings = (theme: Theme, followCamera: boolean, spatialAudio: boolean, volume: number, customVRMUrl?: string, audioFiles?: AudioFile[]): void => {
   if (typeof window === 'undefined') return
 
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ theme, followCamera, spatialAudio, volume, customVRMUrl }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ theme, followCamera, spatialAudio, volume, customVRMUrl, audioFiles }))
   } catch (error) {
     console.warn('Failed to save settings to localStorage:', error)
   }
@@ -44,6 +46,8 @@ export const useSettings = () => {
   const [customVRMUrl, setCustomVRMUrl] = useState<string | null>(null)
   const [vrmFileName, setVrmFileName] = useState<string | null>(null)
   const [isVRMLoading, setIsVRMLoading] = useState(false)
+  const [audioFiles, setAudioFiles] = useState<AudioFile[]>([])
+  const [currentPlayingAudio, setCurrentPlayingAudio] = useState<string | null>(null)
 
   // Load settings on mount
   useEffect(() => {
@@ -54,6 +58,7 @@ export const useSettings = () => {
     setSpatialAudio(settings.spatialAudio)
     setVolume(settings.volume)
     setCustomVRMUrl(settings.customVRMUrl || null)
+    setAudioFiles(settings.audioFiles || [])
   }, [])
 
   const themes: ThemeOption[] = [
@@ -83,23 +88,23 @@ export const useSettings = () => {
 
   const changeTheme = useCallback((theme: Theme) => {
     setCurrentTheme(theme)
-    saveSettings(theme, followCamera, spatialAudio, volume, customVRMUrl || undefined)
-  }, [followCamera, spatialAudio, volume, customVRMUrl])
+    saveSettings(theme, followCamera, spatialAudio, volume, customVRMUrl || undefined, audioFiles)
+  }, [followCamera, spatialAudio, volume, customVRMUrl, audioFiles])
 
   const changeFollowCamera = useCallback((newFollowCamera: boolean) => {
     setFollowCamera(newFollowCamera)
-    saveSettings(currentTheme, newFollowCamera, spatialAudio, volume, customVRMUrl || undefined)
-  }, [currentTheme, spatialAudio, volume, customVRMUrl])
+    saveSettings(currentTheme, newFollowCamera, spatialAudio, volume, customVRMUrl || undefined, audioFiles)
+  }, [currentTheme, spatialAudio, volume, customVRMUrl, audioFiles])
 
   const changeSpatialAudio = useCallback((newSpatialAudio: boolean) => {
     setSpatialAudio(newSpatialAudio)
-    saveSettings(currentTheme, followCamera, newSpatialAudio, volume, customVRMUrl || undefined)
-  }, [currentTheme, followCamera, volume, customVRMUrl])
+    saveSettings(currentTheme, followCamera, newSpatialAudio, volume, customVRMUrl || undefined, audioFiles)
+  }, [currentTheme, followCamera, volume, customVRMUrl, audioFiles])
 
   const changeVolume = useCallback((newVolume: number) => {
     setVolume(newVolume)
-    saveSettings(currentTheme, followCamera, spatialAudio, newVolume, customVRMUrl || undefined)
-  }, [currentTheme, followCamera, spatialAudio, customVRMUrl])
+    saveSettings(currentTheme, followCamera, spatialAudio, newVolume, customVRMUrl || undefined, audioFiles)
+  }, [currentTheme, followCamera, spatialAudio, customVRMUrl, audioFiles])
 
   const changeVRMFile = useCallback((file: File | null) => {
     setIsVRMLoading(true)
@@ -108,7 +113,7 @@ export const useSettings = () => {
       // Reset to default VRM
       setCustomVRMUrl(null)
       setVrmFileName(null)
-      saveSettings(currentTheme, followCamera, spatialAudio, volume, undefined)
+      saveSettings(currentTheme, followCamera, spatialAudio, volume, undefined, audioFiles)
       setIsVRMLoading(false)
       return
     }
@@ -117,15 +122,49 @@ export const useSettings = () => {
     const url = URL.createObjectURL(file)
     setCustomVRMUrl(url)
     setVrmFileName(file.name)
-    saveSettings(currentTheme, followCamera, spatialAudio, volume, url)
+    saveSettings(currentTheme, followCamera, spatialAudio, volume, url, audioFiles)
 
     // Note: isVRMLoading will be set to false by the VRMViewer component
     // when the model is successfully loaded
-  }, [currentTheme, followCamera, spatialAudio, volume])
+  }, [currentTheme, followCamera, spatialAudio, volume, audioFiles])
 
   const setVRMLoading = useCallback((loading: boolean) => {
     setIsVRMLoading(loading)
   }, [])
+
+  const changeAudioFiles = useCallback((newAudioFiles: AudioFile[]) => {
+    setAudioFiles(newAudioFiles)
+    saveSettings(currentTheme, followCamera, spatialAudio, volume, customVRMUrl || undefined, newAudioFiles)
+  }, [currentTheme, followCamera, spatialAudio, volume, customVRMUrl])
+
+  const playAudio = useCallback((audioFile: AudioFile) => {
+    // Stop current audio if playing
+    if (currentPlayingAudio) {
+      setCurrentPlayingAudio(null)
+    }
+
+    // If clicking the same audio that's playing, just stop it
+    if (currentPlayingAudio === audioFile.id) {
+      return
+    }
+
+    // Start new audio
+    setCurrentPlayingAudio(audioFile.id)
+
+    const audio = new Audio(audioFile.url)
+    audio.addEventListener('ended', () => {
+      setCurrentPlayingAudio(null)
+    })
+    audio.addEventListener('error', () => {
+      setCurrentPlayingAudio(null)
+      alert('音声ファイルの再生に失敗しました')
+    })
+
+    audio.play().catch(() => {
+      setCurrentPlayingAudio(null)
+      alert('音声ファイルの再生に失敗しました')
+    })
+  }, [currentPlayingAudio])
 
   return {
     showSettings,
@@ -136,6 +175,8 @@ export const useSettings = () => {
     customVRMUrl,
     vrmFileName,
     isVRMLoading,
+    audioFiles,
+    currentPlayingAudio,
     themes,
     getBackgroundStyle,
     openSettings,
@@ -145,6 +186,8 @@ export const useSettings = () => {
     changeSpatialAudio,
     changeVolume,
     changeVRMFile,
-    setVRMLoading
+    setVRMLoading,
+    changeAudioFiles,
+    playAudio
   }
 }

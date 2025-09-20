@@ -19,6 +19,8 @@ export default function Home() {
     customVRMUrl,
     vrmFileName,
     isVRMLoading,
+    audioFiles,
+    currentPlayingAudio,
     themes,
     getBackgroundStyle,
     openSettings,
@@ -28,7 +30,9 @@ export default function Home() {
     changeSpatialAudio,
     changeVolume,
     changeVRMFile,
-    setVRMLoading
+    setVRMLoading,
+    changeAudioFiles,
+    playAudio
   } = useSettings()
   const [lipSyncVolume, setLipSyncVolume] = useState(0)
   const [camera, setCamera] = useState<THREE.PerspectiveCamera | null>(null)
@@ -85,12 +89,16 @@ export default function Home() {
           volume={volume}
           vrmFileName={vrmFileName || undefined}
           isVRMLoading={isVRMLoading}
+          audioFiles={audioFiles}
+          currentPlayingAudio={currentPlayingAudio}
           onClose={closeSettings}
           onThemeChange={changeTheme}
           onFollowCameraChange={changeFollowCamera}
           onSpatialAudioChange={changeSpatialAudio}
           onVolumeChange={changeVolume}
           onVRMFileChange={changeVRMFile}
+          onAudioFilesChange={changeAudioFiles}
+          onPlayAudio={playAudio}
         />
       )}
     </>
