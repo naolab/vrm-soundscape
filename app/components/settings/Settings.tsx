@@ -4,6 +4,7 @@ import { Button } from '../ui'
 import { ThemeSettings } from './ThemeSettings'
 import { CameraSettings } from './CameraSettings'
 import { AudioSettings } from './AudioSettings'
+import { VRMSettings } from './VRMSettings'
 
 interface SettingsProps {
   themes: ThemeOption[]
@@ -11,11 +12,14 @@ interface SettingsProps {
   followCamera: boolean
   spatialAudio: boolean
   volume: number
+  vrmFileName?: string
+  isVRMLoading?: boolean
   onClose: () => void
   onThemeChange: (theme: Theme) => void
   onFollowCameraChange: (value: boolean) => void
   onSpatialAudioChange: (value: boolean) => void
   onVolumeChange: (value: number) => void
+  onVRMFileChange: (file: File | null) => void
 }
 
 export const Settings: React.FC<SettingsProps> = ({
@@ -24,11 +28,14 @@ export const Settings: React.FC<SettingsProps> = ({
   followCamera,
   spatialAudio,
   volume,
+  vrmFileName,
+  isVRMLoading,
   onClose,
   onThemeChange,
   onFollowCameraChange,
   onSpatialAudioChange,
-  onVolumeChange
+  onVolumeChange,
+  onVRMFileChange
 }) => {
   return (
     <div style={{
@@ -84,19 +91,25 @@ export const Settings: React.FC<SettingsProps> = ({
           }}>
             設定
           </div>
-          
+
+          <VRMSettings
+            onVRMFileChange={onVRMFileChange}
+            currentVRMName={vrmFileName}
+            isLoading={isVRMLoading}
+          />
+
           <CameraSettings
             followCamera={followCamera}
             onFollowCameraChange={onFollowCameraChange}
           />
-          
+
           <AudioSettings
             spatialAudio={spatialAudio}
             volume={volume}
             onSpatialAudioChange={onSpatialAudioChange}
             onVolumeChange={onVolumeChange}
           />
-          
+
           <ThemeSettings
             themes={themes}
             currentTheme={currentTheme}

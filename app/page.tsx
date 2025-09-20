@@ -16,6 +16,9 @@ export default function Home() {
     followCamera,
     spatialAudio,
     volume,
+    customVRMUrl,
+    vrmFileName,
+    isVRMLoading,
     themes,
     getBackgroundStyle,
     openSettings,
@@ -23,7 +26,9 @@ export default function Home() {
     changeTheme,
     changeFollowCamera,
     changeSpatialAudio,
-    changeVolume
+    changeVolume,
+    changeVRMFile,
+    setVRMLoading
   } = useSettings()
   const [lipSyncVolume, setLipSyncVolume] = useState(0)
   const [camera, setCamera] = useState<THREE.PerspectiveCamera | null>(null)
@@ -52,11 +57,13 @@ export default function Home() {
             </div>
           }
         >
-          <VRMViewer 
-            followCamera={followCamera} 
+          <VRMViewer
+            modelPath={customVRMUrl || undefined}
+            followCamera={followCamera}
             lipSyncVolume={lipSyncVolume}
             onCameraUpdate={setCamera}
             onCharacterPositionUpdate={setCharacterPosition}
+            onLoadingStateChange={setVRMLoading}
           />
         </ErrorBoundary>
         <AudioPlayer 
@@ -76,11 +83,14 @@ export default function Home() {
           followCamera={followCamera}
           spatialAudio={spatialAudio}
           volume={volume}
+          vrmFileName={vrmFileName || undefined}
+          isVRMLoading={isVRMLoading}
           onClose={closeSettings}
           onThemeChange={changeTheme}
           onFollowCameraChange={changeFollowCamera}
           onSpatialAudioChange={changeSpatialAudio}
           onVolumeChange={changeVolume}
+          onVRMFileChange={changeVRMFile}
         />
       )}
     </>

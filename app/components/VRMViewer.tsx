@@ -17,14 +17,16 @@ interface VRMViewerProps {
   lipSyncVolume?: number
   onCameraUpdate?: (camera: THREE.PerspectiveCamera) => void
   onCharacterPositionUpdate?: (position: THREE.Vector3) => void
+  onLoadingStateChange?: (loading: boolean) => void
 }
 
-export const VRMViewer: React.FC<VRMViewerProps> = ({ 
+export const VRMViewer: React.FC<VRMViewerProps> = ({
   modelPath = VRM_CONFIG.DEFAULT_MODEL_PATH,
   followCamera = false,
   lipSyncVolume = 0,
   onCameraUpdate,
-  onCharacterPositionUpdate
+  onCharacterPositionUpdate,
+  onLoadingStateChange
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -131,11 +133,14 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         let mouthExpressionName: string | null = null
         const clock = new THREE.Clock()
 
+        // Start loading
+        onLoadingStateChange?.(true)
+
         loader.load(
           modelPath,
           async (gltf: VRMLoadResult) => {
             vrm = gltf.userData.vrm
-            
+
             // Setup VRM model
             setupVRMModel(vrm)
 
@@ -192,10 +197,12 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
             }
 
             setIsLoaded(true)
+            onLoadingStateChange?.(false)
           },
           undefined,
           (error: unknown) => {
             setError('VRMファイルの読み込みに失敗しました')
+            onLoadingStateChange?.(false)
           }
         )
 
@@ -285,7 +292,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
     return () => {
       if (cleanup) cleanup()
     }
-  }, [modelPath, followCamera, handleCameraUpdate, handleCharacterPositionUpdate])
+  }, [modelPath, followCamera, handleCameraUpdate, handleCharacterPositionUpdate, onLoadingStateChange])
 
   if (!isMounted) {
     return (
