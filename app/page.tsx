@@ -21,6 +21,7 @@ export default function Home() {
     isVRMLoading,
     audioFiles,
     currentPlayingAudio,
+    selectedAudioId,
     themes,
     getBackgroundStyle,
     openSettings,
@@ -32,6 +33,7 @@ export default function Home() {
     changeVRMFile,
     setVRMLoading,
     changeAudioFiles,
+    changeSelectedAudio,
     playAudio
   } = useSettings()
   const [lipSyncVolume, setLipSyncVolume] = useState(0)
@@ -70,12 +72,15 @@ export default function Home() {
             onLoadingStateChange={setVRMLoading}
           />
         </ErrorBoundary>
-        <AudioPlayer 
+        <AudioPlayer
           onVolumeChange={setLipSyncVolume}
           camera={camera}
           characterPosition={characterPosition}
           spatialAudio={spatialAudio}
           masterVolume={volume}
+          audioFiles={audioFiles}
+          selectedAudioId={selectedAudioId}
+          onAudioSelect={changeSelectedAudio}
         />
         <Menu onOpenSettings={openSettings} />
       </main>

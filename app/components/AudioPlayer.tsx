@@ -5,6 +5,8 @@ import * as THREE from 'three'
 import { LipSync } from '../lib/LipSync'
 import { UI_STYLES } from '../constants/ui'
 import { useDistanceVolumeControl } from '../hooks/useDistanceVolumeControl'
+import { AudioSelector } from './ui/AudioSelector'
+import { AudioFile } from '../types/audio'
 
 interface AudioPlayerProps {
   onVolumeChange?: (volume: number) => void
@@ -12,9 +14,21 @@ interface AudioPlayerProps {
   characterPosition?: THREE.Vector3
   spatialAudio?: boolean
   masterVolume?: number
+  audioFiles?: AudioFile[]
+  selectedAudioId?: string | null
+  onAudioSelect?: (audioId: string | null) => void
 }
 
-export const AudioPlayer = React.memo<AudioPlayerProps>(({ onVolumeChange, camera, characterPosition, spatialAudio = true, masterVolume = 0.5 }) => {
+export const AudioPlayer = React.memo<AudioPlayerProps>(({
+  onVolumeChange,
+  camera,
+  characterPosition,
+  spatialAudio = true,
+  masterVolume = 0.5,
+  audioFiles = [],
+  selectedAudioId,
+  onAudioSelect
+}) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const lipSyncRef = useRef<LipSync | null>(null)
   const sourceRef = useRef<AudioBufferSourceNode | null>(null)
@@ -47,7 +61,16 @@ export const AudioPlayer = React.memo<AudioPlayerProps>(({ onVolumeChange, camer
       lipSyncRef.current.setSpatialEnabled(spatialAudio)
       lipSyncRef.current.setMasterVolume(masterVolume)
 
-      const source = await lipSyncRef.current.startAnalysis('/audio/test.wav')
+      // Determine which audio to play
+      let audioUrl = '/audio/test.wav' // Default audio
+      if (selectedAudioId) {
+        const selectedAudio = audioFiles.find(audio => audio.id === selectedAudioId)
+        if (selectedAudio) {
+          audioUrl = selectedAudio.url
+        }
+      }
+
+      const source = await lipSyncRef.current.startAnalysis(audioUrl)
       if (!source) return
 
       sourceRef.current = source
@@ -76,7 +99,7 @@ export const AudioPlayer = React.memo<AudioPlayerProps>(({ onVolumeChange, camer
     } catch (error) {
       setIsPlaying(false)
     }
-  }, [spatialAudio, masterVolume, onVolumeChange])
+  }, [spatialAudio, masterVolume, onVolumeChange, selectedAudioId, audioFiles])
 
   const stop = useCallback(() => {
     if (sourceRef.current) {
@@ -91,15 +114,31 @@ export const AudioPlayer = React.memo<AudioPlayerProps>(({ onVolumeChange, camer
   }, [onVolumeChange])
 
   return (
-    <button
-      onClick={isPlaying ? stop : play}
-      style={{
-        ...UI_STYLES.POSITION.AUDIO_PLAYER,
-        ...UI_STYLES.BUTTON.BASE,
-        ...UI_STYLES.BUTTON.AUDIO_PLAYER
-      }}
-    >
-      {isPlaying ? '⏸' : '▶'}
-    </button>
+    <div style={{
+      ...UI_STYLES.POSITION.AUDIO_PLAYER,
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px'
+    }}>
+      {/* Audio selector dropdown */}
+      <AudioSelector
+        audioFiles={audioFiles}
+        selectedAudioId={selectedAudioId}
+        onAudioSelect={onAudioSelect || (() => {})}
+        disabled={isPlaying}
+      />
+
+      {/* Play/pause button */}
+      <button
+        onClick={isPlaying ? stop : play}
+        style={{
+          ...UI_STYLES.BUTTON.BASE,
+          ...UI_STYLES.BUTTON.AUDIO_PLAYER,
+          position: 'static' // Override absolute positioning
+        }}
+      >
+        {isPlaying ? '⏸' : '▶'}
+      </button>
+    </div>
   )
 })
