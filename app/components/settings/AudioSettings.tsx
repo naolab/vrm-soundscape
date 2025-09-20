@@ -17,10 +17,10 @@ export const AudioSettings: React.FC<AudioSettingsProps> = ({
   return (
     <div style={{ marginBottom: '40px' }}>
       <div style={{
-        fontSize: '20px',
+        fontSize: '22px',
         fontWeight: 'bold',
         color: '#333',
-        marginBottom: '16px'
+        marginBottom: '20px'
       }}>
         音響設定
       </div>
@@ -33,10 +33,10 @@ export const AudioSettings: React.FC<AudioSettingsProps> = ({
       
       <div style={{ marginTop: '24px' }}>
         <div style={{
-          fontSize: '16px',
-          fontWeight: '500',
+          fontSize: '18px',
+          fontWeight: '600',
           color: '#333',
-          marginBottom: '8px'
+          marginBottom: '12px'
         }}>
           音量 ({Math.round(volume * 100)}%)
         </div>

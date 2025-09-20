@@ -18,7 +18,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = React.memo(({
       gap: '12px'
     }}>
       {label && (
-        <span style={{ color: '#333', fontSize: '14px' }}>
+        <span style={{ color: '#333', fontSize: '18px', fontWeight: '500' }}>
           {label}
         </span>
       )}

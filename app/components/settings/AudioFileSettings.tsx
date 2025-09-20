@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { Button } from '../ui'
 import { AudioFile } from '../../types/audio'
+import { MusicFileIcon } from '../ui/icons'
 
 interface AudioFileSettingsProps {
   audioFiles: AudioFile[]
@@ -119,10 +120,10 @@ export const AudioFileSettings: React.FC<AudioFileSettingsProps> = ({
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
     }}>
       <h3 style={{
-        fontSize: '20px',
+        fontSize: '22px',
         fontWeight: 'bold',
         color: '#333',
-        marginBottom: '16px'
+        marginBottom: '20px'
       }}>
         音声ファイル ({audioFiles.length}/{maxFiles})
       </h3>
@@ -146,16 +147,20 @@ export const AudioFileSettings: React.FC<AudioFileSettingsProps> = ({
         onClick={() => audioFiles.length < maxFiles && fileInputRef.current?.click()}
       >
         <div style={{
-          fontSize: '24px',
-          marginBottom: '8px',
-          color: dragActive ? '#007AFF' : '#999'
+          marginBottom: '12px',
+          display: 'flex',
+          justifyContent: 'center'
         }}>
-          🎵
+          <MusicFileIcon
+            size={32}
+            color={dragActive ? '#007AFF' : '#999'}
+          />
         </div>
         <div style={{
-          fontSize: '16px',
+          fontSize: '18px',
           color: '#333',
-          marginBottom: '4px'
+          marginBottom: '8px',
+          fontWeight: '500'
         }}>
           {audioFiles.length >= maxFiles
             ? `最大${maxFiles}個までアップロード可能です`
@@ -164,7 +169,7 @@ export const AudioFileSettings: React.FC<AudioFileSettingsProps> = ({
         </div>
         {audioFiles.length < maxFiles && (
           <div style={{
-            fontSize: '14px',
+            fontSize: '16px',
             color: '#666'
           }}>
             またはクリックしてファイルを選択
@@ -193,10 +198,10 @@ export const AudioFileSettings: React.FC<AudioFileSettingsProps> = ({
       {audioFiles.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
           <div style={{
-            fontSize: '16px',
+            fontSize: '18px',
             fontWeight: 'bold',
             color: '#333',
-            marginBottom: '12px'
+            marginBottom: '16px'
           }}>
             アップロード済みファイル:
           </div>
@@ -222,7 +227,7 @@ export const AudioFileSettings: React.FC<AudioFileSettingsProps> = ({
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
-                    fontSize: '14px',
+                    fontSize: '16px',
                     fontWeight: '500',
                     color: '#333',
                     overflow: 'hidden',
@@ -232,7 +237,7 @@ export const AudioFileSettings: React.FC<AudioFileSettingsProps> = ({
                     {file.name}
                   </div>
                   <div style={{
-                    fontSize: '12px',
+                    fontSize: '14px',
                     color: '#666'
                   }}>
                     {formatFileSize(file.size)}
@@ -244,7 +249,7 @@ export const AudioFileSettings: React.FC<AudioFileSettingsProps> = ({
                       onClick={() => onPlayAudio(file)}
                       style={{
                         padding: '4px 8px',
-                        fontSize: '12px',
+                        fontSize: '14px',
                         backgroundColor: isPlaying === file.id ? '#FF6B6B' : '#007AFF',
                         color: 'white',
                         border: 'none',
@@ -259,7 +264,7 @@ export const AudioFileSettings: React.FC<AudioFileSettingsProps> = ({
                     onClick={() => removeAudioFile(file.id)}
                     style={{
                       padding: '4px 8px',
-                      fontSize: '12px',
+                      fontSize: '14px',
                       backgroundColor: '#FF6B6B',
                       color: 'white',
                       border: 'none',
@@ -291,7 +296,7 @@ export const AudioFileSettings: React.FC<AudioFileSettingsProps> = ({
             color: 'white',
             border: 'none',
             borderRadius: '8px',
-            fontSize: '14px',
+            fontSize: '16px',
             cursor: audioFiles.length >= maxFiles ? 'not-allowed' : 'pointer'
           }}
         >
@@ -307,7 +312,7 @@ export const AudioFileSettings: React.FC<AudioFileSettingsProps> = ({
               color: '#FF6B6B',
               border: '1px solid #FF6B6B',
               borderRadius: '8px',
-              fontSize: '14px',
+              fontSize: '16px',
               cursor: 'pointer'
             }}
           >

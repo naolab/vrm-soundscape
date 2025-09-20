@@ -16,10 +16,10 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({
   return (
     <div style={{ marginBottom: '40px' }}>
       <div style={{
-        fontSize: '20px',
+        fontSize: '22px',
         fontWeight: 'bold',
         color: '#333',
-        marginBottom: '16px'
+        marginBottom: '20px'
       }}>
         テーマ設定
       </div>

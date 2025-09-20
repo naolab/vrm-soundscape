@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { Button } from '../ui'
+import { VRMFileIcon } from '../ui/icons'
 
 interface VRMSettingsProps {
   onVRMFileChange: (file: File | null) => void
@@ -72,18 +73,19 @@ export const VRMSettings: React.FC<VRMSettingsProps> = ({
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
     }}>
       <h3 style={{
-        fontSize: '20px',
+        fontSize: '22px',
         fontWeight: 'bold',
         color: '#333',
-        marginBottom: '16px'
+        marginBottom: '20px'
       }}>
         VRMキャラクター
       </h3>
 
       <div style={{
-        marginBottom: '16px',
-        fontSize: '14px',
-        color: '#666'
+        marginBottom: '20px',
+        fontSize: '16px',
+        color: '#666',
+        fontWeight: '500'
       }}>
         現在のキャラクター: {currentVRMName || 'デフォルト'}
       </div>
@@ -106,21 +108,25 @@ export const VRMSettings: React.FC<VRMSettingsProps> = ({
         onClick={() => fileInputRef.current?.click()}
       >
         <div style={{
-          fontSize: '24px',
-          marginBottom: '8px',
-          color: dragActive ? '#007AFF' : '#999'
+          marginBottom: '12px',
+          display: 'flex',
+          justifyContent: 'center'
         }}>
-          📁
+          <VRMFileIcon
+            size={32}
+            color={dragActive ? '#007AFF' : '#999'}
+          />
         </div>
         <div style={{
-          fontSize: '16px',
+          fontSize: '18px',
           color: '#333',
-          marginBottom: '4px'
+          marginBottom: '8px',
+          fontWeight: '500'
         }}>
           {isLoading ? 'VRMファイルを読み込み中...' : 'VRMファイルをドラッグ&ドロップ'}
         </div>
         <div style={{
-          fontSize: '14px',
+          fontSize: '16px',
           color: '#666'
         }}>
           またはクリックしてファイルを選択
@@ -158,7 +164,7 @@ export const VRMSettings: React.FC<VRMSettingsProps> = ({
             color: 'white',
             border: 'none',
             borderRadius: '8px',
-            fontSize: '14px',
+            fontSize: '16px',
             cursor: isLoading ? 'not-allowed' : 'pointer',
             opacity: isLoading ? 0.6 : 1
           }}
@@ -175,7 +181,7 @@ export const VRMSettings: React.FC<VRMSettingsProps> = ({
             color: '#666',
             border: '1px solid #ddd',
             borderRadius: '8px',
-            fontSize: '14px',
+            fontSize: '16px',
             cursor: isLoading ? 'not-allowed' : 'pointer',
             opacity: isLoading ? 0.6 : 1
           }}
