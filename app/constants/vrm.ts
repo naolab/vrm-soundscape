@@ -19,6 +19,6 @@ export const VRM_CONFIG = {
       INTENSITY: Math.PI * 0.2
     }
   },
-  DEFAULT_MODEL_PATH: '/models/Monet_Sample_A.vrm',
+  DEFAULT_MODEL_PATH: '/models/Noa.vrm',
   MOUTH_EXPRESSION_CANDIDATES: ['aa', 'A', 'a', 'mouth_a', 'mouth_aa', 'Aa', 'oh', 'O', 'o']
 } as const
