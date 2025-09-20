@@ -107,6 +107,11 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
         cameraControls.target.set(0, VRM_CONFIG.CAMERA.POSITION.Y, 0)
         cameraControls.update()
 
+        // Function to update controls based on followCamera state
+        const updateControlsState = (isFollowing: boolean) => {
+          cameraControls.enableRotate = !isFollowing
+        }
+
         // Notify parent about initial camera state
         handleCameraUpdate(camera)
 
@@ -217,6 +222,9 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
             cameraFollower.setEnabled(followCamera)
             cameraFollower.update()
           }
+
+          // Update OrbitControls rotation based on followCamera state
+          updateControlsState(followCamera)
           
           // Update VRM expressions (lip sync) before vrm.update for this frame
           if (vrm) {
