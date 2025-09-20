@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { Theme, ThemeOption } from '../../types/settings'
-import { Button } from '../ui'
+import { Modal } from '../ui/Modal'
 import { AudioFile } from '../../types/audio'
 import { SettingsTabs, SettingsTab } from './SettingsTabs'
 import { TabContent } from './TabContent'
 
 interface SettingsProps {
+  isOpen: boolean
   themes: ThemeOption[]
   currentTheme: Theme
   followCamera: boolean
@@ -26,6 +27,7 @@ interface SettingsProps {
 }
 
 export const Settings: React.FC<SettingsProps> = ({
+  isOpen,
   themes,
   currentTheme,
   followCamera,
@@ -58,60 +60,18 @@ export const Settings: React.FC<SettingsProps> = ({
   }, [])
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-      backdropFilter: 'blur(8px)',
-      WebkitBackdropFilter: 'blur(8px)',
-      zIndex: 40
-    }}>
-      {/* Close Button */}
-      <div style={{ position: 'absolute', top: 'clamp(16px, 3vh, 24px)', left: 'clamp(16px, 3vw, 24px)', zIndex: 50 }}>
-        <Button
-          onClick={onClose}
-          style={{
-            width: 'clamp(36px, 8vw, 44px)',
-            height: 'clamp(36px, 8vw, 44px)',
-            borderRadius: '8px',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            border: '2px solid rgba(255, 255, 255, 0.8)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 'clamp(16px, 4vw, 20px)',
-            color: '#666',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-          }}
-        >
-          ×
-        </Button>
-      </div>
-
-      {/* Main Content Container */}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="設定"
+      size="xl"
+    >
       <div style={{
         display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        padding: isMobile ? '10px' : '20px',
-        boxSizing: 'border-box'
+        flexDirection: isMobile ? 'column' : 'row',
+        minHeight: '600px',
+        gap: '1rem'
       }}>
-        {/* Settings Panel */}
-        <div style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          width: '100%',
-          maxWidth: '1200px',
-          maxHeight: isMobile ? 'calc(100vh - 20px)' : 'calc(100vh - 40px)',
-          minHeight: '600px',
-          boxSizing: 'border-box'
-        }}>
         {/* Mobile Tab Selector */}
         {isMobile && (
           <div style={{
@@ -178,8 +138,7 @@ export const Settings: React.FC<SettingsProps> = ({
           currentTheme={currentTheme}
           onThemeChange={onThemeChange}
         />
-        </div>
       </div>
-    </div>
+    </Modal>
   )
 }

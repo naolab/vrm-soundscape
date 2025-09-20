@@ -1,44 +1,65 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense, lazy, useCallback } from 'react'
 import * as THREE from 'three'
-import { useSettings } from './hooks/useSettings'
+import { useThemeSettings } from './hooks/useThemeSettings'
+import { useAudioSettings } from './hooks/useAudioSettings'
+import { useVRMSettings } from './hooks/useVRMSettings'
+import { useUISettings } from './hooks/useUISettings'
 import { Menu } from './components/Menu'
 import { Settings } from './components/settings'
-import { VRMViewer } from './components/VRMViewer'
-import { AudioPlayer } from './components/AudioPlayer'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { LoadingSpinner } from './components/ui/LoadingSpinner'
+
+// 重いコンポーネントを動的インポート
+const VRMViewer = lazy(() => import('./components/VRMViewer').then(module => ({ default: module.VRMViewer })))
+const AudioPlayer = lazy(() => import('./components/AudioPlayer').then(module => ({ default: module.AudioPlayer })))
 
 export default function Home() {
+  // 細分化されたフックを使用
+  const { currentTheme, themes, getBackgroundStyle, changeTheme } = useThemeSettings()
   const {
-    showSettings,
-    currentTheme,
-    followCamera,
     spatialAudio,
     volume,
-    customVRMUrl,
-    vrmFileName,
-    isVRMLoading,
     audioFiles,
-    currentPlayingAudio,
     selectedAudioId,
-    themes,
-    getBackgroundStyle,
-    openSettings,
-    closeSettings,
-    changeTheme,
-    changeFollowCamera,
+    currentPlayingAudio,
     changeSpatialAudio,
     changeVolume,
-    changeVRMFile,
-    setVRMLoading,
     changeAudioFiles,
     changeSelectedAudio,
     playAudio
-  } = useSettings()
+  } = useAudioSettings()
+  const {
+    followCamera,
+    customVRMUrl,
+    vrmFileName,
+    isVRMLoading,
+    changeFollowCamera,
+    changeVRMFile,
+    setVRMLoading
+  } = useVRMSettings()
+  const { showSettings, openSettings, closeSettings } = useUISettings()
   const [lipSyncVolume, setLipSyncVolume] = useState(0)
   const [camera, setCamera] = useState<THREE.PerspectiveCamera | null>(null)
   const [characterPosition, setCharacterPosition] = useState<THREE.Vector3 | null>(null)
+
+  // コールバック関数をメモ化
+  const handleCameraUpdate = useCallback((camera: THREE.PerspectiveCamera) => {
+    setCamera(camera)
+  }, [])
+
+  const handleCharacterPositionUpdate = useCallback((position: THREE.Vector3) => {
+    setCharacterPosition(position)
+  }, [])
+
+  const handleVRMLoadingStateChange = useCallback((loading: boolean) => {
+    setVRMLoading(loading)
+  }, [setVRMLoading])
+
+  const handleVolumeChange = useCallback((volume: number) => {
+    setLipSyncVolume(volume)
+  }, [])
 
   return (
     <>
@@ -63,18 +84,39 @@ export default function Home() {
             </div>
           }
         >
-          <VRMViewer
-            modelPath={customVRMUrl || undefined}
-            followCamera={followCamera}
-            lipSyncVolume={lipSyncVolume}
-            onCameraUpdate={setCamera}
-            onCharacterPositionUpdate={setCharacterPosition}
-            onLoadingStateChange={setVRMLoading}
-          />
+          <Suspense fallback={
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)'
+            }}>
+              <LoadingSpinner message="VRMキャラクターを読み込み中..." />
+            </div>
+          }>
+            <VRMViewer
+              modelPath={customVRMUrl || undefined}
+              followCamera={followCamera}
+              lipSyncVolume={lipSyncVolume}
+              onCameraUpdate={handleCameraUpdate}
+              onCharacterPositionUpdate={handleCharacterPositionUpdate}
+              onLoadingStateChange={handleVRMLoadingStateChange}
+            />
+          </Suspense>
         </ErrorBoundary>
-        <AudioPlayer
-          onVolumeChange={setLipSyncVolume}
-          camera={camera}
+        <Suspense fallback={
+          <div style={{
+            position: 'absolute',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)'
+          }}>
+            <LoadingSpinner size="sm" message="音声プレイヤーを読み込み中..." />
+          </div>
+        }>
+          <AudioPlayer
+            onVolumeChange={handleVolumeChange}
+            camera={camera}
           characterPosition={characterPosition}
           spatialAudio={spatialAudio}
           masterVolume={volume}
@@ -82,13 +124,14 @@ export default function Home() {
           selectedAudioId={selectedAudioId}
           onAudioSelect={changeSelectedAudio}
         />
+        </Suspense>
         <Menu onOpenSettings={openSettings} />
       </main>
 
-      {showSettings && (
-        <Settings
-          themes={themes}
-          currentTheme={currentTheme}
+      <Settings
+        isOpen={showSettings}
+        themes={themes}
+        currentTheme={currentTheme}
           followCamera={followCamera}
           spatialAudio={spatialAudio}
           volume={volume}
@@ -105,7 +148,6 @@ export default function Home() {
           onAudioFilesChange={changeAudioFiles}
           onPlayAudio={playAudio}
         />
-      )}
     </>
   )
 }

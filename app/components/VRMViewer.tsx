@@ -20,7 +20,7 @@ interface VRMViewerProps {
   onLoadingStateChange?: (loading: boolean) => void
 }
 
-export const VRMViewer: React.FC<VRMViewerProps> = ({
+export const VRMViewer: React.FC<VRMViewerProps> = React.memo(({
   modelPath = VRM_CONFIG.DEFAULT_MODEL_PATH,
   followCamera = false,
   lipSyncVolume = 0,
@@ -79,16 +79,28 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           VRM_CONFIG.CAMERA.POSITION.Z
         )
 
-        // Renderer setup
+        // Renderer setup with performance optimizations
         const renderer = new THREE.WebGLRenderer({
           canvas: canvasRef.current,
           alpha: true,
-          antialias: true
+          antialias: window.devicePixelRatio <= 1, // Only enable AA on low-DPI displays
+          powerPreference: 'high-performance' // Prefer dedicated GPU
         })
         renderer.setSize(window.innerWidth, window.innerHeight)
-        renderer.setPixelRatio(window.devicePixelRatio)
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)) // Cap pixel ratio for performance
         renderer.shadowMap.enabled = true
         renderer.shadowMap.type = THREE.PCFSoftShadowMap
+
+        // Additional performance settings
+        renderer.outputColorSpace = THREE.SRGBColorSpace
+        renderer.toneMapping = THREE.ACESFilmicToneMapping
+        renderer.toneMappingExposure = 1.0
+
+        // Enable frustum culling and automatic clearing
+        renderer.autoClear = true
+        renderer.autoClearColor = true
+        renderer.autoClearDepth = true
+        renderer.autoClearStencil = true
 
         // Lights
         const directionalLight = new THREE.DirectionalLight(0xffffff, VRM_CONFIG.LIGHTING.DIRECTIONAL.INTENSITY)
@@ -206,11 +218,21 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
           }
         )
 
-        // Animation loop
+        // Animation loop with frame rate optimization
         let animationId: number
-        const animate = () => {
+        let lastFrameTime = 0
+        const targetFPS = 60
+        const frameInterval = 1000 / targetFPS
+
+        const animate = (currentTime = 0) => {
           animationId = requestAnimationFrame(animate)
-          
+
+          // Frame rate limiting for better performance
+          if (currentTime - lastFrameTime < frameInterval) {
+            return
+          }
+          lastFrameTime = currentTime
+
           const deltaTime = clock.getDelta()
 
           // Update animation mixer first (affects poses/expressions from clips)
@@ -353,4 +375,4 @@ export const VRMViewer: React.FC<VRMViewerProps> = ({
       />
     </>
   )
-}
+})
