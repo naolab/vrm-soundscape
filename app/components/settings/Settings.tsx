@@ -1,12 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Theme, ThemeOption } from '../../types/settings'
 import { Button } from '../ui'
-import { ThemeSettings } from './ThemeSettings'
-import { CameraSettings } from './CameraSettings'
-import { AudioSettings } from './AudioSettings'
-import { VRMSettings } from './VRMSettings'
-import { AudioFileSettings } from './AudioFileSettings'
 import { AudioFile } from '../../types/audio'
+import { SettingsTabs, SettingsTab } from './SettingsTabs'
+import { TabContent } from './TabContent'
 
 interface SettingsProps {
   themes: ThemeOption[]
@@ -47,6 +44,8 @@ export const Settings: React.FC<SettingsProps> = ({
   onAudioFilesChange,
   onPlayAudio
 }) => {
+  const [activeTab, setActiveTab] = useState<SettingsTab>('vrm')
+
   return (
     <div style={{
       position: 'fixed',
@@ -54,13 +53,13 @@ export const Settings: React.FC<SettingsProps> = ({
       left: '0',
       width: '100vw',
       height: '100vh',
-      backgroundColor: 'rgba(255, 255, 255, 0.8)',
-      backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
       zIndex: 40
     }}>
       {/* Close Button */}
-      <div style={{ position: 'absolute', top: '24px', left: '24px' }}>
+      <div style={{ position: 'absolute', top: '24px', left: '24px', zIndex: 50 }}>
         <Button
           onClick={onClose}
           style={{
@@ -82,58 +81,46 @@ export const Settings: React.FC<SettingsProps> = ({
         </Button>
       </div>
 
-      {/* Settings Content */}
+      {/* Main Content Layout */}
       <div style={{
-        maxHeight: '100vh',
-        overflow: 'auto',
-        padding: '0'
+        display: 'flex',
+        height: '100vh',
+        paddingTop: '16px',
+        paddingBottom: '16px',
+        paddingLeft: '40px',
+        paddingRight: '40px',
+        maxWidth: '1200px',
+        margin: '0 auto'
       }}>
-        <div style={{
-          maxWidth: '768px',
-          margin: '0 auto',
-          padding: '96px 40px 40px 40px'
-        }}>
-          <div style={{
-            fontSize: '32px',
-            fontWeight: 'bold',
-            color: '#333',
-            marginBottom: '40px'
-          }}>
-            設定
-          </div>
+        {/* Left Sidebar Tabs */}
+        <SettingsTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
-          <VRMSettings
-            onVRMFileChange={onVRMFileChange}
-            currentVRMName={vrmFileName}
-            isLoading={isVRMLoading}
-          />
-
-          <CameraSettings
-            followCamera={followCamera}
-            onFollowCameraChange={onFollowCameraChange}
-          />
-
-          <AudioSettings
-            spatialAudio={spatialAudio}
-            volume={volume}
-            onSpatialAudioChange={onSpatialAudioChange}
-            onVolumeChange={onVolumeChange}
-          />
-
-          <AudioFileSettings
-            audioFiles={audioFiles}
-            maxFiles={10}
-            onAudioFilesChange={onAudioFilesChange}
-            onPlayAudio={onPlayAudio}
-            isPlaying={currentPlayingAudio}
-          />
-
-          <ThemeSettings
-            themes={themes}
-            currentTheme={currentTheme}
-            onThemeChange={onThemeChange}
-          />
-        </div>
+        {/* Right Content Area */}
+        <TabContent
+          activeTab={activeTab}
+          // VRM settings
+          vrmFileName={vrmFileName}
+          isVRMLoading={isVRMLoading}
+          onVRMFileChange={onVRMFileChange}
+          followCamera={followCamera}
+          onFollowCameraChange={onFollowCameraChange}
+          // Audio settings
+          spatialAudio={spatialAudio}
+          volume={volume}
+          onSpatialAudioChange={onSpatialAudioChange}
+          onVolumeChange={onVolumeChange}
+          audioFiles={audioFiles}
+          currentPlayingAudio={currentPlayingAudio}
+          onAudioFilesChange={onAudioFilesChange}
+          onPlayAudio={onPlayAudio}
+          // Display settings
+          themes={themes}
+          currentTheme={currentTheme}
+          onThemeChange={onThemeChange}
+        />
       </div>
     </div>
   )
