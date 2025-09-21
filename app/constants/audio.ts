@@ -25,6 +25,6 @@ export const AUDIO_CONFIG = {
     CONE_OUTER_ANGLE: 360, // Outer cone angle (omnidirectional)
     CONE_OUTER_GAIN: 0,    // Volume outside cone
     POSITION_SMOOTHING: 0.1, // Smoothing for position updates
-    HEAD_OFFSET: 0.2    // Distance to move head forward from camera position (meters)
+    HEAD_OFFSET: 0.5    // Distance to move head forward from camera position (meters)
   }
 } as const
