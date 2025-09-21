@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { LipSync } from '../lib/LipSync'
+import { AUDIO_CONFIG } from '../constants/audio'
 
 export function useDistanceVolumeControl(
   lipSyncRef: React.RefObject<LipSync | null>,
@@ -31,7 +32,15 @@ export function useDistanceVolumeControl(
       
       // Only calculate distance and update spatial position every 3rd frame (20fps instead of 60fps)
       if (frameCountRef.current % 3 === 0) {
-        const distance = camera.position.distanceTo(characterPosition)
+        // Calculate distance from head position (camera + forward offset) to character
+        const forward = new THREE.Vector3(0, 0, -1)
+        forward.applyQuaternion(camera.quaternion)
+        forward.normalize()
+
+        const headPosition = camera.position.clone().add(
+          forward.multiplyScalar(AUDIO_CONFIG.SPATIAL.HEAD_OFFSET)
+        )
+        const distance = headPosition.distanceTo(characterPosition)
         
         // Only update volume if distance changed significantly (optimization)
         if (Math.abs(distance - lastDistanceRef.current) > 0.01) {

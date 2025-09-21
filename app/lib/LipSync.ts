@@ -113,8 +113,14 @@ export class LipSync {
 
     const listener = this.audioContext.listener
 
-    // Update listener position (camera/user position)
-    const listenerPos = camera.position
+    // Update listener position (head position - camera position + forward offset)
+    const forward = new THREE.Vector3(0, 0, -1)
+    forward.applyQuaternion(camera.quaternion)
+    forward.normalize()
+
+    const listenerPos = camera.position.clone().add(
+      forward.multiplyScalar(AUDIO_CONFIG.SPATIAL.HEAD_OFFSET)
+    )
     if (listener.positionX) {
       // Use new API if available
       const currentTime = this.audioContext.currentTime
@@ -125,9 +131,8 @@ export class LipSync {
       listener.positionZ.linearRampToValueAtTime(listenerPos.z, smoothingTime)
       
       // Update listener orientation (where the camera is looking)
-      const forward = new THREE.Vector3(0, 0, -1)
+      // Reuse the forward vector already calculated above
       const up = new THREE.Vector3(0, 1, 0)
-      forward.applyQuaternion(camera.quaternion)
       up.applyQuaternion(camera.quaternion)
       
       listener.forwardX.linearRampToValueAtTime(forward.x, smoothingTime)
@@ -139,12 +144,11 @@ export class LipSync {
     } else {
       // Fallback for older browsers
       listener.setPosition(listenerPos.x, listenerPos.y, listenerPos.z)
-      
-      const forward = new THREE.Vector3(0, 0, -1)
+
+      // Reuse the forward vector and create up vector for fallback
       const up = new THREE.Vector3(0, 1, 0)
-      forward.applyQuaternion(camera.quaternion)
       up.applyQuaternion(camera.quaternion)
-      
+
       listener.setOrientation(
         forward.x, forward.y, forward.z,
         up.x, up.y, up.z
