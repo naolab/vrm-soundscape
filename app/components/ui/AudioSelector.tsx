@@ -46,10 +46,10 @@ export const AudioSelector: React.FC<AudioSelectorProps> = ({
     return (
       <div style={{
         padding: '8px 12px',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
+        backgroundColor: 'rgba(64, 64, 64, 0.7)',
+        border: '1px solid rgba(128, 128, 128, 0.4)',
         borderRadius: '8px',
-        color: 'rgba(255, 255, 255, 0.5)',
+        color: 'rgba(255, 255, 255, 0.7)',
         fontSize: '14px',
         cursor: 'not-allowed'
       }}>
@@ -72,8 +72,8 @@ export const AudioSelector: React.FC<AudioSelectorProps> = ({
         disabled={disabled}
         style={{
           padding: '8px 32px 8px 12px',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
+          backgroundColor: 'rgba(64, 64, 64, 0.9)',
+          border: '1px solid rgba(128, 128, 128, 0.5)',
           borderRadius: '8px',
           color: 'white',
           fontSize: '14px',
