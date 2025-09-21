@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense, lazy, useCallback } from 'react'
+import { useState, useEffect, Suspense, lazy, useCallback } from 'react'
 import * as THREE from 'three'
 import { useThemeSettings } from './hooks/useThemeSettings'
 import { useAudioSettings } from './hooks/useAudioSettings'
@@ -43,6 +43,11 @@ export default function Home() {
   const [lipSyncVolume, setLipSyncVolume] = useState(0)
   const [camera, setCamera] = useState<THREE.PerspectiveCamera | null>(null)
   const [characterPosition, setCharacterPosition] = useState<THREE.Vector3 | null>(null)
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // コールバック関数をメモ化
   const handleCameraUpdate = useCallback((camera: THREE.PerspectiveCamera) => {
@@ -63,11 +68,11 @@ export default function Home() {
 
   return (
     <>
-      <main style={{ 
-        width: '100vw', 
-        height: '100vh', 
+      <main style={{
+        width: '100vw',
+        height: '100vh',
         position: 'relative',
-        ...getBackgroundStyle(currentTheme)
+        ...(isClient ? getBackgroundStyle(currentTheme) : {})
       }}>
         <ErrorBoundary
           fallback={
