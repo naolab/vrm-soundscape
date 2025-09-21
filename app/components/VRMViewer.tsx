@@ -33,6 +33,8 @@ export const VRMViewer: React.FC<VRMViewerProps> = React.memo(({
   const [error, setError] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
   const lipSyncVolumeRef = useRef(0)
+  const isLoadingRef = useRef(false)
+  const animationFrameRef = useRef<number | null>(null)
 
   // Keep latest lipSync volume available inside animation loop
   useEffect(() => {
@@ -55,7 +57,8 @@ export const VRMViewer: React.FC<VRMViewerProps> = React.memo(({
     let cleanup: (() => void) | null = null
 
     const initVRM = async () => {
-      if (!canvasRef.current) return
+      if (!canvasRef.current || isLoadingRef.current) return
+      isLoadingRef.current = true
 
       try {
         const THREE = await import('three')
@@ -214,13 +217,12 @@ export const VRMViewer: React.FC<VRMViewerProps> = React.memo(({
         )
 
         // Animation loop with frame rate optimization
-        let animationId: number
         let lastFrameTime = 0
         const targetFPS = 60
         const frameInterval = 1000 / targetFPS
 
         const animate = (currentTime = 0) => {
-          animationId = requestAnimationFrame(animate)
+          animationFrameRef.current = requestAnimationFrame(animate)
 
           // Frame rate limiting for better performance
           if (currentTime - lastFrameTime < frameInterval) {
@@ -291,16 +293,39 @@ export const VRMViewer: React.FC<VRMViewerProps> = React.memo(({
         // Final cleanup function
         cleanup = () => {
           window.removeEventListener('resize', handleResize)
-          cancelAnimationFrame(animationId)
+
+          // Stop animation loop
+          if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current)
+            animationFrameRef.current = null
+          }
+
+          // Clean up VRM
+          if (vrm) {
+            scene.remove(vrm.scene)
+            vrm.dispose?.()
+          }
+
+          // Clean up mixer
           if (mixer) {
             mixer.stopAllAction()
+            mixer.uncacheRoot(mixer.getRoot())
           }
+
+          // Clean up controls and renderer
           cameraControls.dispose()
           renderer.dispose()
+
+          // Clear scene
+          scene.clear()
+
+          // Reset loading flag
+          isLoadingRef.current = false
         }
 
       } catch (err) {
         setError('VRMの初期化に失敗しました')
+        isLoadingRef.current = false
       }
     }
 
@@ -309,7 +334,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = React.memo(({
     return () => {
       if (cleanup) cleanup()
     }
-  }, [modelPath, followCamera, handleCameraUpdate, handleCharacterPositionUpdate, onLoadingStateChange])
+  }, [modelPath]) // modelPathが変更された時のみ再初期化
 
   if (!isMounted) {
     return (
