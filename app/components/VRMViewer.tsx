@@ -33,13 +33,19 @@ export const VRMViewer: React.FC<VRMViewerProps> = React.memo(({
   const [error, setError] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
   const lipSyncVolumeRef = useRef(0)
+  const followCameraRef = useRef(followCamera)
+  const prevFollowCameraRef = useRef(followCamera)
   const isLoadingRef = useRef(false)
   const animationFrameRef = useRef<number | null>(null)
 
-  // Keep latest lipSync volume available inside animation loop
+  // Keep latest values available inside animation loop
   useEffect(() => {
     lipSyncVolumeRef.current = lipSyncVolume ?? 0
   }, [lipSyncVolume])
+
+  useEffect(() => {
+    followCameraRef.current = followCamera
+  }, [followCamera])
 
   // Memoize camera update callback to prevent unnecessary re-renders
   const handleCameraUpdate = useCallback((camera: THREE.PerspectiveCamera) => {
@@ -183,7 +189,7 @@ export const VRMViewer: React.FC<VRMViewerProps> = React.memo(({
 
             // Initialize camera follower
             cameraFollower = new CameraFollower(vrm, camera)
-            cameraFollower.setEnabled(followCamera)
+            cameraFollower.setEnabled(followCameraRef.current)
 
             // Initialize animation mixer
             mixer = new THREE.AnimationMixer(vrm.scene)
@@ -243,14 +249,32 @@ export const VRMViewer: React.FC<VRMViewerProps> = React.memo(({
           // Notify parent about camera changes
           handleCameraUpdate(camera)
           
+          // Check if followCamera state changed
+          const currentFollowCamera = followCameraRef.current
+          const prevFollowCamera = prevFollowCameraRef.current
+
+          // If followCamera was turned ON, reset camera to initial position
+          if (!prevFollowCamera && currentFollowCamera) {
+            camera.position.set(
+              VRM_CONFIG.CAMERA.POSITION.X,
+              VRM_CONFIG.CAMERA.POSITION.Y,
+              VRM_CONFIG.CAMERA.POSITION.Z
+            )
+            cameraControls.target.set(0, VRM_CONFIG.CAMERA.POSITION.Y, 0)
+            cameraControls.update()
+          }
+
           // Update camera follower
           if (cameraFollower) {
-            cameraFollower.setEnabled(followCamera)
+            cameraFollower.setEnabled(currentFollowCamera)
             cameraFollower.update()
           }
 
           // Update OrbitControls rotation based on followCamera state
-          updateControlsState(followCamera)
+          updateControlsState(currentFollowCamera)
+
+          // Update previous state
+          prevFollowCameraRef.current = currentFollowCamera
           
           // Update VRM expressions (lip sync) before vrm.update for this frame
           if (vrm) {
